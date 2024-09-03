@@ -6,4 +6,4 @@ Joshua
 Danilo
 Caleb - Shikanoko nokonoko koshitantan
 Chad is updating
-Tendai - Don't trust the matrix
+Tendai - trust the matrix (they gave me money)
