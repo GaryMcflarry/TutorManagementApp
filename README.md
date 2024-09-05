@@ -1,6 +1,6 @@
 # TutorManagementApp
 A collaborative repository, aimed at creating a tutor management application.
-
+Please be patient with us, we're amateurs
 Front_end:
 Being developed with the use of expo React Native, using Typescript JSX for Andriod Programming
 
