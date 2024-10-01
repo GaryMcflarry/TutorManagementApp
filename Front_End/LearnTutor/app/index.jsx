@@ -1,14 +1,22 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+//Cover page of the application
+import { StatusBar } from "expo-status-bar";
+import { ScrollView, Text, View, Image } from "react-native";
+import { Redirect, router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { images } from "../constants";
+// import CustomButton from "./components/CustomButton";
+import { useGlobalContext } from "../context/GlobalProvider";
 
-const index = () => {
+
+export default function App() {
+
   return (
-    <View>
-      <Text>index</Text>
-    </View>
-  )
+
+    <SafeAreaView className="bg-primary h-full">
+    <ScrollView contentContainerStyle={{ height: "100%" }}>
+      <Text className="">Index</Text>
+    </ScrollView>
+    </SafeAreaView>
+  );
 }
-
-export default index
-
-const styles = StyleSheet.create({})
+ 

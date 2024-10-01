@@ -3,7 +3,6 @@ import { Stack, SplashScreen } from "expo-router";
 import { useFonts } from "expo-font";
 import { useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
-
 import GlobalProvider from "../context/GlobalProvider";
 
 SplashScreen.preventAutoHideAsync(); //Preventing hide async before any of the assets have loaded
@@ -40,9 +39,8 @@ const RootLayout = () => {
   return (
     <>
       <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="index" />
       </Stack>
-      <StatusBar backgroundColor="#161622" style="light" />
     </>
   );
 };
