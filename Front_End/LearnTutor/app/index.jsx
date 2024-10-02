@@ -14,7 +14,7 @@ export default function App() {
 
     <SafeAreaView className="bg-primary h-full">
     <ScrollView contentContainerStyle={{ height: "100%" }}>
-      <Text className="">Index</Text>
+      <Text className="text-tertiary font-pregular text-2xl">Index</Text>
     </ScrollView>
     </SafeAreaView>
   );
