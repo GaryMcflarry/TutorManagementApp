@@ -1,11 +1,65 @@
-# TutorManagementApp
-A collaborative repository, aimed at creating a tutor management application.
-Please be patient with us, we're amateurs
-Front_end:
-Being developed with the use of expo React Native, using Javascript JSX for Andriod Programming, with the addition of implementing tailwinds css properties
+<h1 align="center">Tutor Management App</h1>
 
-Back_end:
-Making use of the springboot framework and servlets to create a RestfulAPI
+###
 
-Database:
-Will make use SQLite to store relational data
+<h5 align="center">A collective repository, A collaborative repository, aimed at creating a tutor management application.</h5>
+
+###
+
+<h4 align="center">Please be patient with us, we're amateurs</h4>
+
+###
+
+<h2 align="left">Front End:</h2>
+
+###
+
+<div align="center">
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" height="40" alt="react logo"  />
+  <img width="12" />
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" height="40" alt="javascript logo"  />
+  <img width="12" />
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tailwindcss/tailwindcss-original-wordmark.svg" height="40" alt="tailwindcss logo"  />
+  <img width="12" />
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/androidstudio/androidstudio-original.svg" height="40" alt="androidstudio logo"  />
+</div>
+
+###
+
+<h4 align="left">We are developing it with the use of the expo React Native.</h4>
+
+###
+
+<h4 align="left">Native wind for using tailwind's style properties.</h4>
+
+###
+
+<h4 align="left">Using Android Studio for emulator testing</h4>
+
+###
+
+<h2 align="left">Back End:</h2>
+
+###
+
+<div align="center">
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/firebase/firebase-plain.svg" height="40" alt="firebase logo"  />
+</div>
+
+###
+
+<h4 align="left">Making use of Firebase properties for:</h4>
+
+###
+
+<h5 align="center">Authentication</h5>
+
+###
+
+<h5 align="center">Api calls</h5>
+
+###
+
+<h5 align="center">Database Storage</h5>
+
+###
