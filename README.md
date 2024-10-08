@@ -1,4 +1,4 @@
-<h1 align="center">Tutor Management App</h1>
+<h1 align="left">Tutor Management App</h1>
 
 ###
 
