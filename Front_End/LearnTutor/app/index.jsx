@@ -18,7 +18,7 @@ export default function App() {
         <CustomButton
           title="Continue"
           handlePress={() => router.push("/sign-in")}
-          containerStyles="w-[110px] h-[62px]"
+          containerStyles="w-[110px] h-[62px] justify-center items-center"
         />
       </View>
       </ScrollView>

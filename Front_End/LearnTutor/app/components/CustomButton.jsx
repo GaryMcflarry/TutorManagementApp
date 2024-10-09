@@ -11,7 +11,7 @@ const CustomButton = ({title, handlePress, containerStyles, isLoading}) => {
     //press functionality 
     onPress={handlePress}
     activeOpacity={0.7}
-    className={`bg-tertiary justify-center items-center	${containerStyles} `}
+    className={`bg-tertiary ${containerStyles} `}
     style={styles.shadow}
     //good for disabling the button while the app is still loading
     disabled={isLoading}>
