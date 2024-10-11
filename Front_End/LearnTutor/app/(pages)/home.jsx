@@ -3,7 +3,7 @@ import React from 'react'
 import CustomButton from "../components/CustomButton";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const home = ({ navigation }) => {
+const Home = ({ navigation }) => {
   return (
     <SafeAreaView>
     <View>
@@ -18,6 +18,6 @@ const home = ({ navigation }) => {
   )
 }
 
-export default home
+export default Home
 
 const styles = StyleSheet.create({})
