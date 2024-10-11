@@ -1,14 +1,14 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 
-const homework = () => {
+const Homework = () => {
   return (
     <View>
-      <Text>homework</Text>
+      <Text>H</Text>
     </View>
   )
 }
 
-export default homework
+export default Homework
 
 const styles = StyleSheet.create({})

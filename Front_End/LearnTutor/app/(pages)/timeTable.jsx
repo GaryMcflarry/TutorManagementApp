@@ -1,14 +1,14 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 
-const timeTable = () => {
+const TimeTable = () => {
   return (
     <View>
-      <Text>timeTable</Text>
+      <Text>T</Text>
     </View>
   )
 }
 
-export default timeTable
+export default TimeTable
 
 const styles = StyleSheet.create({})
