@@ -17,14 +17,16 @@ const _layout = () => {
 
     <Drawer.Navigator initialRouteName="Home" screenOptions={{
       drawerStyle: {
+      justifyContent: 'left',
       backgroundColor: '#FEA07D',
-      width: 220
+      width: 180
     },
     drawerPosition: 'right',
     drawerType: 'front',
     drawerLabelStyle: {
       color: "white",
       fontWeight: "bold",
+      marginLeft: -20
     },
     drawerItemStyle: {
       backgroundColor: "#4F7978",
