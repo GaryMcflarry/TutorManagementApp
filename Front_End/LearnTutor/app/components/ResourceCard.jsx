@@ -8,7 +8,7 @@ const ResourceCard = () => {
     </View>
   )
 }
-//potatoes are valid. And so are you. Go get em, you potato
-export default ResourceCard 
 
+export default ResourceCard 
+//test
 const styles = StyleSheet.create({})
