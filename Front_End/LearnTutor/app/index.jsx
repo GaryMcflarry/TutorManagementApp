@@ -32,6 +32,7 @@ export default function App() {
           handlePress={() => router.push("/sign-in")}
           containerStyles="w-[200px] h-[60px] justify-center items-center rounded-full"
         />
+        
         </View>
       </ScrollView>
     </SafeAreaView>
