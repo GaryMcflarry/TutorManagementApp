@@ -6,7 +6,6 @@ import { images } from "../constants";
 import { useGlobalContext } from "../context/GlobalProvider";
 import CustomButton from "./components/CustomButton";
 
-
 export default function App() {
 
   return (

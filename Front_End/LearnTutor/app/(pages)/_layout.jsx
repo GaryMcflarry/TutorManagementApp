@@ -44,28 +44,24 @@ const _layout = () => {
                 color={'white'}></Icon>
        }} />
       <Drawer.Screen name="Admin" component={Admin} options={{ 
-        headerShown: false,
         drawerIcon: config => <Icon
                 size={30}
                 name={'person-outline'}
                 color={'white'}></Icon>
        }}/>
       <Drawer.Screen name="TimeTable" component={TimeTable} options={{ 
-        headerShown: false,
         drawerIcon: config => <Icon
                 size={30}
                 name={'calendar-outline'}
                 color={'white'}></Icon>
        }}/>
       <Drawer.Screen name="Homework" component={Homework} options={{ 
-        headerShown: false,
         drawerIcon: config => <Icon
                 size={30}
                 name={'book-outline'}
                 color={'white'}></Icon>
        }}/>
       <Drawer.Screen name="Chats" component={Conversations} options={{ 
-        headerShown: false,
         drawerIcon: config => <Icon
                 size={30}
                 name={'chatbubble-outline'}
