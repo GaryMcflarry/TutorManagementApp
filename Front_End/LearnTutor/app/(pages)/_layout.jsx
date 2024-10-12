@@ -31,7 +31,7 @@ const _layout = () => {
     drawerItemStyle: {
       backgroundColor: "#4F7978",
       shadow: {
-      elevation: 1,
+      elevation: 20,
       },
       marginTop: 15
     }
