@@ -3,6 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import React from 'react'
 import { StatusBar } from "expo-status-bar";
 import StatusBarWrapper from '../components/statusBar';
+import CustomButton from '../components/CustomButton';
 
 
 
@@ -15,6 +16,11 @@ const home = () => {
       <Text>
         Home
       </Text>
+      <CustomButton
+          title="Time Table"
+          handlePress={() => router.push("/timeTable")}
+          containerStyles="w-[110px] h-[62px]"
+        />
     </StatusBarWrapper>
     </View>
   )

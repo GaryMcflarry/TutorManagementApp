@@ -12,6 +12,12 @@ const _layout = () => {
           headerShown: false
         }}
       />
+      <Stack.Screen
+        name='timeTable'
+        options={{
+          headerShown: false
+        }}
+      />
     </Stack>
   </>
   )

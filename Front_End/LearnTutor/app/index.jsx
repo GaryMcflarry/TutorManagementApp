@@ -17,7 +17,7 @@ export default function App() {
         <Text className="text-tertiary font-pregular text-2xl">Index</Text>
         <CustomButton
           title="Continue"
-          handlePress={() => router.push("/home")}
+          handlePress={() => router.push("/timeTable")}
           containerStyles="w-[110px] h-[62px]"
         />
       </View>
