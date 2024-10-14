@@ -10,7 +10,7 @@ import { Redirect, router } from "expo-router";
 
 
 
-const home = () => {
+const Home = ({navigation}) => {
 
 
   return (
@@ -19,11 +19,6 @@ const home = () => {
       <Text>
         Home
       </Text>
-      <CustomButton
-          title="Time Table"
-          handlePress={() => router.push("/timeTable")}
-          containerStyles="w-[110px] h-[62px]"
-        />
          <CustomButton
               title="Menu But"
               handlePress={() => navigation.toggleDrawer()}
@@ -41,6 +36,6 @@ const styles = StyleSheet.create({
   }
 })
 
-export default home
+export default Home
 
 
