@@ -14,7 +14,6 @@ import {icons} from "../../constants";
 const _layout = () => {
   const Drawer = createDrawerNavigator();
   return (
-
     <Drawer.Navigator initialRouteName="Home" screenOptions={{
       drawerStyle: {
       justifyContent: 'left',
