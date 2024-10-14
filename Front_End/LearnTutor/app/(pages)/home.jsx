@@ -8,6 +8,8 @@ import { Redirect, router } from "expo-router";
 
 
 
+
+
 const home = () => {
 
 
@@ -22,10 +24,17 @@ const home = () => {
           handlePress={() => router.push("/timeTable")}
           containerStyles="w-[110px] h-[62px]"
         />
+         <CustomButton
+              title="Menu But"
+              handlePress={() => navigation.toggleDrawer()}
+              containerStyles="w-[110px] h-[62px] justify-center items-center"
+            />
     </StatusBarWrapper>
     </View>
+    </SafeAreaView>
   )
 }
+
 
 const styles = StyleSheet.create({
   shadow: {
@@ -34,4 +43,5 @@ const styles = StyleSheet.create({
 })
 
 export default home
+
 
