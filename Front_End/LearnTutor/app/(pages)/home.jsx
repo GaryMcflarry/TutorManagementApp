@@ -4,6 +4,7 @@ import React from 'react'
 import { StatusBar } from "expo-status-bar";
 import StatusBarWrapper from '../components/statusBar';
 import CustomButton from '../components/CustomButton';
+import { Redirect, router } from "expo-router";
 
 
 
@@ -12,7 +13,7 @@ const home = () => {
 
   return (
     <View className="bg-white h-full w-full">
-    <StatusBarWrapper>
+    <StatusBarWrapper title="Home">
       <Text>
         Home
       </Text>

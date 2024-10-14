@@ -5,7 +5,7 @@ import StatusBarWrapper from '../components/statusBar'
 const timeTable = () => {
   return (
     <View className="bg-white h-full w-full">
-      <StatusBarWrapper>
+      <StatusBarWrapper title="TimeTable">
         <Text>timeTable</Text>
       </StatusBarWrapper>
     </View>

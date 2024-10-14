@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, ScrollView } from 'react-native'
 import { Children } from "react"
 import { StatusBar } from "expo-status-bar";
 
-const StatusBarWrapper = ({ children }) =>
+const StatusBarWrapper = ({ children, title }) =>
 {
     return(
         
@@ -11,7 +11,7 @@ const StatusBarWrapper = ({ children }) =>
 
             <View className="bg-primary h-20 justify-center items-center mt-5" style={styles.shadow}>
                 {/* <Text className="text-white font-pregular text-xs" style={styles.shadow}>14:43</Text> */}
-                <Text className="text-white font-pbold text-xl">Account</Text>
+                <Text className="text-white font-pbold text-xl">{title}</Text>
             </View>
             
             {children}
