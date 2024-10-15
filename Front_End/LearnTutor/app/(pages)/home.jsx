@@ -31,7 +31,6 @@ const home = () => {
             />
     </StatusBarWrapper>
     </View>
-    </SafeAreaView>
   )
 }
 
