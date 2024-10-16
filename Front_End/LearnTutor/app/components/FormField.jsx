@@ -2,7 +2,9 @@ import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 import { Input, Icon } from '@rneui/themed';
 
+
 export const EmailField = () => {
+
   return (
     <Input
       placeholder='INPUT WITH ERROR MESSAGE'
@@ -17,8 +19,5 @@ export const PasswordField = () => {
     <Input placeholder="Password" secureTextEntry={true} />
   )
 }
-
-
-
 
 const styles = StyleSheet.create({})
