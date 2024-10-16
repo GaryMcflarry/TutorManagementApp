@@ -11,7 +11,7 @@ import TimeTableCard from '../components/TimeTableCard';
 
 
 
-const home = () => {
+const Home = () => {
 
 
   return (
@@ -63,6 +63,6 @@ const styles = StyleSheet.create({
   }
 })
 
-export default home
+export default Home
 
 
