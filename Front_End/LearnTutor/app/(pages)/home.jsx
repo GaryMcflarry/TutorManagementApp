@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import StatusBarWrapper from '../components/statusBar';
 import CustomButton from '../components/CustomButton';
 import { Redirect, router } from "expo-router";
+import TimeTableCard from '../components/TimeTableCard';
 
 
 
@@ -29,6 +30,27 @@ const home = () => {
               handlePress={() => navigation.toggleDrawer()}
               containerStyles="w-[110px] h-[62px] justify-center items-center"
             />
+
+      <TimeTableCard 
+        time="14:00 - 15:00" 
+        tutorName="Tutor Name" 
+        sessionType="Online" 
+        subject="Science" 
+        online
+      />
+
+      <TimeTableCard 
+        time="16:00 - 17:00" 
+        tutorName="Tutor Name" 
+        sessionType="Offline" 
+        subject="Mathematics"
+      />
+
+      <TimeTableCard 
+        time="18:00 - 19:00" 
+        sessionType="No Session"
+      />
+
     </StatusBarWrapper>
     </View>
   )
