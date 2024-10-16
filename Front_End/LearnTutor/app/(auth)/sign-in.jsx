@@ -14,6 +14,7 @@ import { ActivityIndicator, KeyboardAvoidingView } from "react-native";
 import { getCurrentUser, createUser, login } from "../../lib/firebase";
 import { useGlobalContext } from "../../context/GlobalProvider";
 
+
 const signIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,6 +52,7 @@ const signIn = () => {
 
   return (
     <SafeAreaView className="bg-primary h-full">
+
       <ScrollView contentContainerStyle={{ height: "100%" }}>
         <Text className="text-tertiary font-pregular text-2xl">SignIp</Text>
         <KeyboardAvoidingView behavior="padding">
