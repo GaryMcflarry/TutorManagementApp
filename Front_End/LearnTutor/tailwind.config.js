@@ -8,6 +8,7 @@ module.exports = {
         secondary: "#FFFFFF",
         tertiary: "#4F7978",
         wGreen:"#39753B",
+        formFieldGrey: "#D9D9D9",
         black: {
           DEFAULT: "#000",
           100: "#1E1E2D",
