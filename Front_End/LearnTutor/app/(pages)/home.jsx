@@ -14,7 +14,6 @@ const Home = ({ navigation }) => {
         <View className="w-full h-[70px] items-end p-3">
           <MenuButton
            handlePress={() => navigation.toggleDrawer()} 
-            
            />
         </View>
         <Text>Home</Text>
