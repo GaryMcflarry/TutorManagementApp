@@ -13,6 +13,7 @@ import CustomButton from "../components/CustomButton";
 import { ActivityIndicator, KeyboardAvoidingView } from "react-native";
 import { getCurrentUser, createUser, login } from "../../lib/firebase";
 import { useGlobalContext } from "../../context/GlobalProvider";
+import FormField from "../components/FormField";
 
 
 const signIn = () => {
@@ -73,7 +74,25 @@ const signIn = () => {
               onChangeText={(text) => setPassword(text)}
             />
           </View>
-          <View className="h-[100px] w-full justify-center items-center">
+          
+
+          <View className="justify-center items-center">
+            <FormField
+            value={""}
+            placeholder="Enter Email"
+            />
+            <FormField
+            value={""}
+            placeholder="Enter Password"
+            />
+
+            <View className="w-[250px] justify-center items-center mt-14 h-2 bg-tertiary rounded-md"></View>
+            <View className="w-[140px] justify-center items-center mt-10 h-2 bg-tertiary rounded-md"></View>
+
+          </View>
+
+
+          <View className="h-[100px] w-full justify-center items-center mt-5">
             {loading ? (
               <ActivityIndicator size="large" color="#0000ff" />
             ) : (
@@ -81,10 +100,11 @@ const signIn = () => {
               <CustomButton
                   title="Login"
                   handlePress={() => signIn()}
-                  containerStyles="w-[110px] h-[62px] justify-center items-center" />
+                  containerStyles="w-[150px] h-[62px] justify-center items-center" />
               </>
             )}
           </View>
+
         </KeyboardAvoidingView>
       </ScrollView>
     </SafeAreaView>
