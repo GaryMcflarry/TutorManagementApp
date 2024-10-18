@@ -24,10 +24,11 @@ const FormField = ({
         className="border-2 border-tertiary w-full h-16 px-4 bg-formFieldGrey rounded-md focus:border-secondary items-center flex-row w-[350px] mt-16"
       >
         <TextInput
-          className="flex-1 text-white font-psemibold text-base bg-formFieldGrey border-white-200"
+          className="flex-1 text-tertiary font-psemibold text-base bg-formFieldGrey border-white-200"
           value={value}
+          autoCapitalize="none"
           placeholder={placeholder}
-          placeholderTextColor="#7b7b8b"
+          placeholderTextColor="#4F7978"
           onChangeText={handleChangeText}
           secureTextEntry={placeholder === "Enter Password" && !showPassword}
         />
@@ -35,7 +36,7 @@ const FormField = ({
         {placeholder === "Enter Password" && (
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
             <Image
-              source={!showPassword ? icons.eye : icons.eyehide}
+              source={!showPassword ? icons.eye : icons.eyeHide}
               className="w-6 h-6"
               resizeMode="contain"
             />
