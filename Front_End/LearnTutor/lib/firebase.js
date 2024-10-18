@@ -80,6 +80,14 @@ export const login = async (email, password) => {
   }
 };
 
+export const signOut = async () => {
+  try {
+    await FIREBASE_AUTH.signOut()
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 // Function to get the current user's data
 export const getCurrentUser = async () => {
   try {
