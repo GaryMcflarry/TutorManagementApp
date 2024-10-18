@@ -13,6 +13,7 @@ import CustomButton from "../components/CustomButton";
 import { ActivityIndicator, KeyboardAvoidingView } from "react-native";
 import { getCurrentUser, createUser, login } from "../../lib/firebase";
 import { useGlobalContext } from "../../context/GlobalProvider";
+import FormField from "../components/FormField";
 
 
 const signIn = () => {
@@ -56,24 +57,31 @@ const signIn = () => {
       <ScrollView contentContainerStyle={{ height: "100%" }}>
         <Text className="text-tertiary font-pregular text-2xl">SignIp</Text>
         <KeyboardAvoidingView behavior="padding">
-          <View className="h-[200px] w-full justify-center items-center bg-white">
-            <TextInput
-              className="bg-primary border-solid border-black w-[200px] h-[30px] my-6"
-              value={email}
-              placeholder="Email"
-              autoCapitalize="none"
-              onChangeText={(text) => setEmail(text)}
+        <View className="w-full my-10 justify-center items-center">
+          <Text className="text-7xl font-pregular text-white mt-7 text-center">
+            learn.
+          </Text>
+        </View>
+          <View className="justify-center items-center">
+            <FormField
+            value={email}
+            placeholder="Enter Email"
+            handleChangeText={(text) => setEmail(text)}
             />
-            <TextInput
-              className="bg-primary border-solid border-black w-[200px] h-[30px]"
-              value={password}
-              secureTextEntry={true}
-              placeholder="Password"
-              autoCapitalize="none"
-              onChangeText={(text) => setPassword(text)}
+            <FormField
+            value={password}
+            placeholder="Enter Password"
+            handleChangeText={(text) => setPassword(text)}
+
             />
+
+            <View className="w-[250px] justify-center items-center mt-14 h-2 bg-tertiary rounded-md"></View>
+            <View className="w-[140px] justify-center items-center mt-10 h-2 bg-tertiary rounded-md"></View>
+
           </View>
-          <View className="h-[100px] w-full justify-center items-center">
+
+
+          <View className="h-[100px] w-full justify-center items-center mt-5">
             {loading ? (
               <ActivityIndicator size="large" color="#0000ff" />
             ) : (
@@ -81,10 +89,11 @@ const signIn = () => {
               <CustomButton
                   title="Login"
                   handlePress={() => signIn()}
-                  containerStyles="w-[110px] h-[62px] justify-center items-center" />
+                  containerStyles="w-[150px] h-[62px] justify-center items-center" />
               </>
             )}
           </View>
+
         </KeyboardAvoidingView>
       </ScrollView>
     </SafeAreaView>
