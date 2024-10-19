@@ -38,19 +38,13 @@ const RootLayout = () => {
   }
 
   return (
-    //Globalprovider will occur no matter the routing path
-    //Auth routes
-    //Tabs routs
-    //main route or cover page
-    //search route/page
-    //routing to the respective layouts when is reffering to a folder
-    // or it routes to the page instead
     <GlobalProvider>
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(pages)" options={{ headerShown: false }} />
-        <Stack.Screen name="search/[query]" options={{ headerShown: false }} />
+        <Stack.Screen name="convo/[query]" options={{ headerShown: false }} />
+        <Stack.Screen name="chat/[query]" options={{ headerShown: false }} />
       </Stack>
       <StatusBar backgroundColor="#FEA07D" style="light" />
     </GlobalProvider>

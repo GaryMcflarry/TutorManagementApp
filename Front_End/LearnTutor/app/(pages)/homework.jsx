@@ -1,10 +1,20 @@
 import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import React from 'react';
+import StatusBarWrapper from '../components/statusBar';
+import MenuButton from "../components/MenuButton";
 
-const Homework = () => {
+
+
+const Homework = ({ navigation }) => {
   return (
     <View>
-      <Text>H</Text>
+      <StatusBarWrapper title="Homework">
+        <View className="w-full h-[70px] items-end p-3">
+          <MenuButton
+           handlePress={() => navigation.toggleDrawer()} 
+           />
+        </View>
+      </StatusBarWrapper>
     </View>
   )
 }

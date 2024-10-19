@@ -1,14 +1,33 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native'
 import React from 'react'
+import { Image } from 'react-native'
+import { icons, images } from '../../constants'
 
-const ConversationBar = () => {
+const ConversationBar = ({title, handlePress, isLoading}) => {
   return (
     <View>
-      <Text>ConversationBar</Text>
+       <TouchableOpacity 
+    onPress={handlePress}
+    activeOpacity={0.7}
+    className="bg-primary h-12 w-[375px] my-5 border-none rounded-md flex-row items-center p-3"
+    style={styles.shadow}
+    disabled={isLoading}>
+    <View className="bg-gray-300 h-10 w-10 justify-center items-center mr-4 border-none rounded-lg">
+      <Image source={icons.profile} className="h-8 w-8 "/>
     </View>
-  )
+      <Text className="text-white font-psemibold text-base flex-1">{title}</Text>
+      <Image source={icons.rightArrow}/>
+    </TouchableOpacity>
+    </View>
+  ) 
 }
+//nativewind Shadow doesn't work for android devices on nativewind.
+const styles = StyleSheet.create({
+  shadow: {
+    // For Android
+    elevation: 5,
+    shadowColor: '#000000',
+  },
+});
 
 export default ConversationBar
-
-const styles = StyleSheet.create({})
