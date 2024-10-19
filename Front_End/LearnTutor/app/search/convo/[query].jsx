@@ -1,10 +1,10 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import React from 'react';
-import StatusBarWrapper from '../components/statusBar';
-import MenuButton from "../components/MenuButton";
-import SearchInput from "../components/SearchInput";
-import Conversationbar from "../components/ConversationBar"
+import MenuButton from "../../components/MenuButton";
+import SearchInput from "../../components/SearchInput";
+import Conversationbar from "../../components/ConversationBar"
 import { router } from 'expo-router';
+import StatusBarWrapper from '../../components/statusBar';
 
 
 const Conversations = ({ navigation }) => {
