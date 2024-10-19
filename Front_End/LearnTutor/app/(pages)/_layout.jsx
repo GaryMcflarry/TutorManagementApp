@@ -7,7 +7,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import Home from "./home";
 import Admin from "./admin";
 import TimeTable from "./timeTable";
-import Conversations from "../search/convo/[query]";
+import Conversations from "./conversations";
 import Homework from "./homework";
 import {icons} from "../../constants";
 

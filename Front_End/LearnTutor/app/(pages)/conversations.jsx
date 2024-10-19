@@ -23,11 +23,7 @@ const Conversations = ({ navigation }) => {
             <SearchInput />
           </View>
           <View className="w-full h-full bg-transparent justify-start items-center">
-            <Conversationbar title='Tutor Name' handlePress={router.replace("/chat")} />
-            <Conversationbar title='Tutor Name' handlePress={router.replace("/chat")}/>
-            <Conversationbar title='Tutor Name' handlePress={router.replace("/chat")}/>
-            <Conversationbar title='Tutor Name' handlePress={router.replace("/chat")}/>
-            <Conversationbar title='Tutor Name' handlePress={router.replace("/chat")}/>
+            <Conversationbar title='Tutor Name' handlePress={() => router.push('/search/[1]')} />
           </View>
         </View>
         </ScrollView>
