@@ -14,7 +14,6 @@ export default function App() {
  //if user is logged in already and the loading is done
  if(!isLoading && isLoggedIn) return <Redirect href="/home" />
 
-
   return (
     <SafeAreaView className="bg-primary h-full w-full">
       <ScrollView contentContainerStyle={{ height: "100%" }}>
