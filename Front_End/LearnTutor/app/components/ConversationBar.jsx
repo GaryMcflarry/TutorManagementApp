@@ -12,8 +12,8 @@ const ConversationBar = ({title, handlePress, isLoading}) => {
     className="bg-primary h-12 w-[375px] my-5 border-none rounded-md flex-row items-center p-3"
     style={styles.shadow}
     disabled={isLoading}>
-    <View className="bg-gray-300 h-10 w-10 justify-center items-center mr-4 border-none rounded-lg">
-      <Image source={icons.profile} className="h-8 w-8 "/>
+    <View className="bg-gray-300 h-10 w-10 justify-center items-center mr-4 border-none rounded-full">
+      <Image source={icons.profile} className="h-7 w-7 "/>
     </View>
       <Text className="text-white font-psemibold text-base flex-1">{title}</Text>
       <Image source={icons.rightArrow}/>

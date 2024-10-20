@@ -9,7 +9,6 @@ import { router } from 'expo-router';
 
 const Conversations = ({ navigation }) => {
   return (
-
     <View>
       <StatusBarWrapper title="Chats">
       <ScrollView>
@@ -33,5 +32,3 @@ const Conversations = ({ navigation }) => {
 }
 
 export default Conversations
-
-const styles = StyleSheet.create({})
