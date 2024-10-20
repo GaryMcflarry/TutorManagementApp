@@ -55,7 +55,6 @@ const signIn = () => {
     <SafeAreaView className="bg-primary h-full">
 
       <ScrollView contentContainerStyle={{ height: "100%" }}>
-        <Text className="text-tertiary font-pregular text-2xl">SignIp</Text>
         <KeyboardAvoidingView behavior="padding">
         <View className="w-full my-10 justify-center items-center">
           <Text className="text-7xl font-pregular text-white mt-7 text-center">
@@ -83,7 +82,7 @@ const signIn = () => {
 
           <View className="h-[100px] w-full justify-center items-center mt-5">
             {loading ? (
-              <ActivityIndicator size="large" color="#0000ff" />
+              <ActivityIndicator size="large" color="#4F7978" />
             ) : (
               <>
               <CustomButton

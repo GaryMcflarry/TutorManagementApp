@@ -16,12 +16,6 @@ const Home = ({ navigation }) => {
            handlePress={() => navigation.toggleDrawer()} 
            />
         </View>
-        <Text>Home</Text>
-        <CustomButton
-          title="Menu But"
-          handlePress={() => navigation.toggleDrawer()}
-          containerStyles="w-[110px] h-[62px] justify-center items-center"
-        />
       </StatusBarWrapper>
     </View>
   );
