@@ -3,12 +3,12 @@ import { Alert } from "react-native";
 
 //custom hook that can be used in all pages
 const useFirebase = (fn) => {
+  
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   //for async code a function within must be used for logic, for some reason without it, it is considered illegal
   //upon page load this effect should occur
-  //used for fetching the neccesary data
 
   const fetchData = async () => {
     setIsLoading(true);

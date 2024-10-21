@@ -15,8 +15,6 @@ import HomeWorkCard from "../components/HomeWorkCard";
     dueDate: "10 October"
   }
 
-
-
 const Homework = ({ navigation }) => {
   return (
     <View>
