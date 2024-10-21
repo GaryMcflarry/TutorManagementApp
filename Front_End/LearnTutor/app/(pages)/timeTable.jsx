@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 import StatusBarWrapper from '../components/statusBar';
 import MenuButton from "../components/MenuButton";
+import ResourceCard from '../components/ResourceCard';
 
 
 const TimeTable = ({ navigation }) => {
@@ -14,6 +15,9 @@ const TimeTable = ({ navigation }) => {
            handlePress={() => navigation.toggleDrawer()} 
            />
         </View>
+        <ResourceCard>
+          
+        </ResourceCard>
       </StatusBarWrapper>
 
     </View>
