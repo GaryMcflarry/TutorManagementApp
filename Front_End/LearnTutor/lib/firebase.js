@@ -105,3 +105,33 @@ export const getCurrentUser = async () => {
     console.error("Error fetching current user:", error);
   }
 };
+
+export const getTutorInfoByStudent = async (user) => {
+  try {
+    // Get the array of tutor IDs (ensure it's an array)
+    const tutorIds = user?.tutors;
+    
+    if (!Array.isArray(tutorIds) || tutorIds.length === 0) {
+      console.log("No tutor IDs found.");
+      return [];
+    }
+
+    // Fetch tutor data for each tutorId, by converting them into document references
+    const tutorPromises = tutorIds.map(async (tutorId) => {
+      if (!tutorId || typeof tutorId !== 'string') {
+        console.warn("Invalid tutor ID:", tutorId);
+        return null; // Skip invalid IDs
+      }
+
+      const tutorDoc = await getDoc(doc(FIREBASE_DB, "User", tutorId));
+      return tutorDoc.exists() ? tutorDoc.data() : null;
+    });
+
+    // Wait for all promises to resolve
+    const tutorDataArray = await Promise.all(tutorPromises);
+    return tutorDataArray.filter(tutor => tutor !== null); // Filter out any null responses
+  } catch (error) {
+    console.error("Error fetching tutor data:", error);
+    return [];
+  } 
+}
