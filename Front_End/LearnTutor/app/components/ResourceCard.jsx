@@ -7,17 +7,17 @@ const ResourceCard = () => {
   return (
 
     <View>
-      <Card containerStyle={{borderRadius:25, height:250, padding:0}}>
-        <View className='bg-wGreen justify-center items-center' style={{minHeight:120, width:'100%', borderRadius:25}} >
+      <Card containerStyle={[styles.card]}>
+        <View className='bg-wGreen justify-center items-center' style={[styles.header]} >
           <Text>[PH]Image</Text>
           </View>
           <View>
             <View style={{padding:10}}>
       <Text className='text-wGreen font-pbold'>[PH]Title</Text>
-      <Text>[PH]Description</Text>
+      <Text styles={{elevation: 10}}>[PH]Description</Text>
       </View>
       <View className='justify-center items-center' style={{padding:15}}>
-        <Button color={'#558571'} containerStyle={{borderRadius:10}}>Link Here</Button>
+        <Button color={'#558571'} containerStyle={{borderRadius:15, width:130}} style={[styles.button]}>Link Here</Button>
       </View>
       </View>
       </Card>
@@ -27,4 +27,20 @@ const ResourceCard = () => {
 }
 
 export default ResourceCard 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({
+  card: {
+    borderRadius:25,
+    height:280,
+    padding:0,
+  },
+  header: {
+    minHeight:120,
+    width:'100%',
+    borderTopLeftRadius: 17,
+    borderTopRightRadius: 17,
+  },
+  button: {
+    width:200,
+    borderRadius:40,
+  }
+})
