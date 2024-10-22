@@ -142,3 +142,37 @@ export const getTutorInfoByStudent = async (user) => {
     return [];
   } 
 }
+
+
+export const getContacts = async (user) => {
+  if (!user) return [];
+
+  let connectedUsers = [];
+  const db = FIREBASE_DB; // Use your Firestore instance
+
+  try {
+    // If the logged-in user is a student, fetch their tutors
+    if (user.status === "student") {
+      const tutorRefs = user.tutors || []; // Ensure `user.tutors` is an array
+      const tutorPromises = tutorRefs.map(async (tutorId) => {
+        const tutorDoc = await getDoc(doc(db, "User", tutorId)); // Fetch tutor document
+        return tutorDoc.exists() ? tutorDoc.data() : null; // Safely check if the document exists
+      });
+      connectedUsers = await Promise.all(tutorPromises);
+
+    // If the logged-in user is a tutor, fetch their students
+    } else if (user.status === "tutor") {
+      const studentRefs = user.students || []; // Ensure `user.tutors` is an array
+      const studentPromises = studentRefs.map(async (studentId) => {
+        const studentDoc = await getDoc(doc(db, "User", studentId)); // Fetch tutor document
+        return studentDoc.exists() ? studentDoc.data() : null; // Safely check if the document exists
+      });
+      connectedUsers = await Promise.all(studentPromises);
+    }
+
+  } catch (error) {
+    console.error("Error fetching connected users: ", error);
+  }
+
+  return connectedUsers.filter(Boolean); // Filter out null values
+};

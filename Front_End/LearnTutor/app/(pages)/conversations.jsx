@@ -1,13 +1,48 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import React from "react";
+import { ScrollView, StyleSheet, Text, View, Image } from "react-native";
+import React, { useState, useEffect } from "react";
 import StatusBarWrapper from "../components/statusBar";
 import MenuButton from "../components/MenuButton";
 import SearchInput from "../components/SearchInput";
-import Conversationbar from "../components/ConversationBar";
+import ConversationBar from "../components/ConversationBar";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useGlobalContext } from "../../context/GlobalProvider";
+import useFirebase from "../../lib/useFirebase"; 
+import { getContacts } from "../../lib/firebase"; 
+import { images } from "../../constants";
 
 const Conversations = ({ navigation }) => {
+  const { user } = useGlobalContext(); // Get the logged-in user
+  const [searchQuery, setSearchQuery] = useState(""); // For search input
+  const [connectedUsers, setConnectedUsers] = useState([]); // List of connected users
+  const [filteredUsers, setFilteredUsers] = useState([]); // Filtered users based on search
+  
+  // Fetch connected users (tutors or students)
+  const { data: usersData, refetch } = useFirebase(() =>
+    getContacts(user)
+  );
+  
+  useEffect(() => {
+    if (usersData) {
+      setConnectedUsers(usersData);
+      setFilteredUsers(usersData); // Initialize with full list
+    }
+  }, [usersData]);
+
+  // Handle Search Input
+  const handleSearch = (text) => {
+    setSearchQuery(text);
+    if (text === "") {
+      setFilteredUsers(connectedUsers); // Reset to full list when search is empty
+    } else {
+      const filtered = connectedUsers.filter((user) =>
+        user?.fullName?.toLowerCase().includes(text.toLowerCase()) || 
+        user?.email?.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredUsers(filtered);
+    }
+  };
+
   return (
     <SafeAreaView>
       <StatusBarWrapper title="Chats">
@@ -17,19 +52,55 @@ const Conversations = ({ navigation }) => {
           </View>
           <View className="w-full h-full">
             <View className="w-full h-[70px] justify-center items-center">
-              <SearchInput />
-            </View>
-            <View className="w-full h-full bg-transparent justify-start items-center">
-              <Conversationbar
-                title="Tutor Name"
-                handlePress={() => router.push("/search/[1]")}
+              {/* Search Input */}
+              <SearchInput 
+                value={searchQuery}
+                onChange={handleSearch}
+                placeholder="Search by name or email"
               />
             </View>
+
+            {/* Display the list of conversations */}
+            <View className="w-full h-full bg-transparent justify-start items-center">
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map((connectedUser, index) => (
+                  <ConversationBar
+                    key={connectedUser.uid || index}  // Fallback to index if uid is missing
+                    title={connectedUser.fullname || "No Name"} // Safely handle missing names
+                    handlePress={() => router.push(`/search/${connectedUser?.uid}`)} 
+                  />
+                ))
+              ) : (
+                // No results found
+                <View className="justify-center items-center p-20">
+                  <Image source={images.empty} className="h-[150px] w-[150px]" />
+                  <Text className="text-lg text-[#888]">No results found</Text>
+                </View>
+              )}
+            </View>
           </View>
+
         </ScrollView>
       </StatusBarWrapper>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  noResultsContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  noResultsImage: {
+    width: 200, // Adjust size as needed
+    height: 200,
+    marginBottom: 10,
+  },
+  noResultsText: {
+    fontSize: 16,
+    color: '#888', // Adjust color as needed
+  },
+});
 
 export default Conversations;
