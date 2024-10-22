@@ -18,14 +18,13 @@ const Conversations = ({ navigation }) => {
   const [filteredUsers, setFilteredUsers] = useState([]); // Filtered users based on search
   
   // Fetch connected users (tutors or students)
-  const { data: usersData, refetch } = useFirebase(() =>
-    getContacts(user)
-  );
-  
+  const { data: usersData, refetch } = useFirebase(() => getContacts(user));
+
   useEffect(() => {
     if (usersData) {
       setConnectedUsers(usersData);
       setFilteredUsers(usersData); // Initialize with full list
+      // console.log("Connected Users: ", usersData); // Proper logging after fetch
     }
   }, [usersData]);
 
@@ -65,9 +64,9 @@ const Conversations = ({ navigation }) => {
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((connectedUser, index) => (
                   <ConversationBar
-                    key={connectedUser.uid || index}  // Fallback to index if uid is missing
+                    key={connectedUser.id || index}  // Fallback to index if uid is missing
                     title={connectedUser.fullname || "No Name"} // Safely handle missing names
-                    handlePress={() => router.push(`/search/${connectedUser?.uid}`)} 
+                    handlePress={() => router.push(`/search/${connectedUser?.id}`)} 
                   />
                 ))
               ) : (
