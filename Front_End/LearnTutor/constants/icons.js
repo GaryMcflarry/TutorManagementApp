@@ -13,6 +13,8 @@ import eye from "../assets/icons/eye.png";
 import play from "../assets/icons/play.png";
 import timetable from "../assets/icons/timetable.png";
 import chat from "../assets/icons/chat.png";
+import WhatsAppIcon from "../assets/icons/WhatsAppIcon.png";
+import MicrosoftTeamsIcon from "../assets/icons/MicrosoftTeamsIcon.png";
 
 export default {
   play,
@@ -29,5 +31,7 @@ export default {
   eyeHide,
   eye,
   chat,
-  timetable
+  timetable,
+  WhatsAppIcon,
+  MicrosoftTeamsIcon
 };

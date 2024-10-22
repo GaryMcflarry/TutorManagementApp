@@ -30,9 +30,8 @@ const StatusBarWrapper = ({ children, title }) => {
 
   return (
     <>
-      <ScrollView contentContainerStyle={{ height: "100%" }}>
         <View
-          className="bg-primary h-20 justify-center items-center mt-5 p-2"
+          className="bg-primary h-20 justify-center items-center p-2"
           style={styles.shadow}
         >
           {/* <Text className="text-white font-pregular text-xs" style={styles.shadow}>14:43</Text> */}
@@ -47,7 +46,6 @@ const StatusBarWrapper = ({ children, title }) => {
         </View>
 
         {children}
-      </ScrollView>
       <StatusBar backgroundColor="#FEA07D" style="light" />
     </>
   );

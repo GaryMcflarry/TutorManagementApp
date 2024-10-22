@@ -7,7 +7,8 @@ module.exports = {
         primary: "#FEA07D",
         secondary: "#FFFFFF",
         tertiary: "#4F7978",
-        wGreen:"#39753B",
+        whatsapp:"#39753B",
+        microsoft: "#5458AF",
         formFieldGrey: "#D9D9D9",
         black: {
           DEFAULT: "#000",

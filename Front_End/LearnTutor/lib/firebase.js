@@ -88,21 +88,27 @@ export const signOut = async () => {
   }
 };
 
-// Function to get the current user's data
+
 export const getCurrentUser = async () => {
   try {
     const currentUser = FIREBASE_AUTH.currentUser;
     if (!currentUser) {
-        console.log("No user is currently signed in")
-        return null;
+      console.log("No user is currently signed in");
+      return null;
     } else {
-        // console.log('Current User: ', currentUser);
-        const userDoc = await getDoc(doc(FIREBASE_DB, "User", currentUser.uid));
-        return userDoc.exists() ? userDoc.data() : null;
+      // Fetch user document from Firestore
+      const userDoc = await getDoc(doc(FIREBASE_DB, "User", currentUser.uid));
+      
+      // Check if the user document exists and return the user data with UID
+      if (userDoc.exists()) {
+        return { uid: currentUser.uid, ...userDoc.data() }; // Include the UID in the returned data
+      } else {
+        return null; // Return null if the document does not exist
+      }
     }
-
   } catch (error) {
     console.error("Error fetching current user:", error);
+    return null; // Return null in case of an error
   }
 };
 
@@ -129,6 +135,7 @@ export const getTutorInfoByStudent = async (user) => {
 
     // Wait for all promises to resolve
     const tutorDataArray = await Promise.all(tutorPromises);
+    // console.log("TEST: ", tutorDataArray);
     return tutorDataArray.filter(tutor => tutor !== null); // Filter out any null responses
   } catch (error) {
     console.error("Error fetching tutor data:", error);
