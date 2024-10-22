@@ -4,12 +4,48 @@ import React from "react";
 import { Button } from "@rneui/base";
 import { icons } from "../../constants";
 
-const ResourceCard = ({ link }) => {
+const ResourceCard = ({ link, tutorData }) => {
   // Determine which card to render based on the link
-
   const renderCardContent = () => {
+    // Check if link exists
+    if (!link && tutorData) {
+      // Unique resource card when link is not available but tutor data exists
+      return (
+        <View>
+          <View
+            className="bg-tutorRC justify-center items-center"
+            style={[styles.header]}
+          >
+            <Image
+              source={icons.TutorResourceCardIcon}
+              className="h-[120px] w-[120px]"
+            />
+          </View>
+          <View>
+            <View style={{ padding: 10 }}>
+              <Text className="text-tutorRC font-pbold">Book a session</Text>
+              <Text className="font-bold text-sm">
+                Book a session with your tutor!
+              </Text>
+            </View>
+          </View>
+          <View className="justify-center items-center" style={{ padding: 15 }}>
+            <Button
+              color={"#E6C11D"}
+              containerStyle={{ borderRadius: 15, width: 130 }}
+              style={[styles.button]}
+              onPress={() => {}}
+            >
+              Link Here
+            </Button>
+          </View>
+        </View>
+      );
+    }
+
     // Switch case based on the link content
     switch (true) {
+      //WhatsApp
       case link.includes("wa.me"):
         return (
           <View>
@@ -56,7 +92,7 @@ const ResourceCard = ({ link }) => {
             </View>
           </View>
         );
-
+      //Microsoft Teams
       case link.includes("microsoft"):
         return (
           <View>
@@ -71,7 +107,9 @@ const ResourceCard = ({ link }) => {
                 <Text className="text-microsoft font-pbold">
                   Microsoft Teams Session
                 </Text>
-                <Text className="font-bold text-sm">Join your allocated teams session!</Text>
+                <Text className="font-bold text-sm">
+                  Join your allocated teams session!
+                </Text>
               </View>
             </View>
             <View
@@ -101,22 +139,25 @@ const ResourceCard = ({ link }) => {
             </View>
           </View>
         );
-
-      case link.includes("tutorial"):
+      //Telegram
+      case link.includes("t.me"):
+        // console.log("Link Telegram: ", link);
         return (
           <View>
             <View
-              className="bg-wGreen justify-center items-center"
+              className="bg-telegram justify-center items-center"
               style={[styles.header]}
             >
-              <Text>{link}</Text>
+              <Image source={icons.TelegramIcon} className="h-20 w-20" />
             </View>
             <View>
               <View style={{ padding: 10 }}>
-                <Text className="text-wGreen font-pbold">
-                  Tutorial Resource
+                <Text className="text-telegram font-pbold">
+                  Telegram Chat Link
                 </Text>
-                <Text>[PH] Description for tutorial resource</Text>
+                <Text className="font-bold text-sm">
+                  Contact Your Tutor via Telegram!
+                </Text>
               </View>
             </View>
             <View
@@ -124,12 +165,21 @@ const ResourceCard = ({ link }) => {
               style={{ padding: 15 }}
             >
               <Button
-                color={"#558571"}
+                color={"#43A9E4"}
                 containerStyle={{ borderRadius: 15, width: 130 }}
                 style={[styles.button]}
                 onPress={() => {
-                  // Handle the button click, e.g., open tutorial link
-                  console.log(`Navigating to: ${link}`);
+                  // Open the link using Linking API
+                  if (link) {
+                    Linking.openURL(link).catch((err) =>
+                      Alert.alert(
+                        "An error occurred while opening the link:",
+                        err
+                      )
+                    );
+                  } else {
+                    Alert.alert("No link available to open.");
+                  }
                 }}
               >
                 Link Here
@@ -137,20 +187,25 @@ const ResourceCard = ({ link }) => {
             </View>
           </View>
         );
-
-      default:
+      //Google Meet
+      case link.includes("meet.google"):
+        // console.log("Link google: ", link);
         return (
           <View>
             <View
-              className="bg-wGreen justify-center items-center"
+              className="bg-gray-100 justify-center items-center"
               style={[styles.header]}
             >
-              <Text>{link}</Text>
+              <Image source={icons.GoogleMeetIcon} className="w-20 h-20" />
             </View>
             <View>
               <View style={{ padding: 10 }}>
-                <Text className="text-wGreen font-pbold">Default Resource</Text>
-                <Text>[PH] Description for default resource</Text>
+                <Text className="text-gray-400 font-pbold">
+                  Google Meet Session
+                </Text>
+                <Text className="font-bold text-sm">
+                  Join your allocated session!
+                </Text>
               </View>
             </View>
             <View
@@ -158,12 +213,21 @@ const ResourceCard = ({ link }) => {
               style={{ padding: 15 }}
             >
               <Button
-                color={"#558571"}
+                color={"#9ca3af"}
                 containerStyle={{ borderRadius: 15, width: 130 }}
                 style={[styles.button]}
                 onPress={() => {
-                  // Handle the button click, e.g., open default link
-                  console.log(`Navigating to: ${link}`);
+                  // Open the link using Linking API
+                  if (link) {
+                    Linking.openURL(link).catch((err) =>
+                      Alert.alert(
+                        "An error occurred while opening the link:",
+                        err
+                      )
+                    );
+                  } else {
+                    Alert.alert("No link available to open.");
+                  }
                 }}
               >
                 Link Here
