@@ -17,16 +17,26 @@ const Conversations = ({ navigation }) => {
   const [connectedUsers, setConnectedUsers] = useState([]); // List of connected users
   const [filteredUsers, setFilteredUsers] = useState([]); // Filtered users based on search
   
-  // Fetch connected users (tutors or students)
-  const { data: usersData, refetch } = useFirebase(() => getContacts(user));
+  // console.log("Connected Users: ", connectedUsers)
 
-  useEffect(() => {
-    if (usersData) {
+  // Fetch connected users (tutors or students)
+  //const { data: usersData, refetch } = useFirebase(() => getContacts(user));
+
+ // Fetch connected users (tutors or students)
+ useEffect(() => {
+  const fetchContacts = async () => {
+    try {
+      const usersData = await getContacts(user); // Fetch users from Firebase
       setConnectedUsers(usersData);
       setFilteredUsers(usersData); // Initialize with full list
-      // console.log("Connected Users: ", usersData); // Proper logging after fetch
+      // console.log("Connected Users: ", filteredUsers); // Proper logging after fetch
+    } catch (error) {
+      console.error("Error fetching connected users: ", error);
     }
-  }, [usersData]);
+  };
+  fetchContacts();
+}, [user]); // Fetch users on component mount or when `user` changes
+
 
   // Handle Search Input
   const handleSearch = (text) => {
@@ -62,11 +72,13 @@ const Conversations = ({ navigation }) => {
             {/* Display the list of conversations */}
             <View className="w-full h-full bg-transparent justify-start items-center">
               {filteredUsers.length > 0 ? (
-                filteredUsers.map((connectedUser, index) => (
+                filteredUsers.map((connectedUser) => (
                   <ConversationBar
-                    key={connectedUser.id || index}  // Fallback to index if uid is missing
+                    key={connectedUser.id}  // Fallback to index if uid is missing
                     title={connectedUser.fullname || "No Name"} // Safely handle missing names
-                    handlePress={() => router.push(`/search/${connectedUser?.id}`)} 
+                    handlePress={() => {
+                      router.push(`/search/${connectedUser.id}`)
+                      }} 
                   />
                 ))
               ) : (

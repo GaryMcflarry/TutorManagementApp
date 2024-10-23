@@ -17,6 +17,7 @@ import {
   where,
   onSnapshot,
   orderBy,
+  serverTimestamp
 } from "firebase/firestore";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -199,7 +200,7 @@ export const fetchRecipientInfo = async (userId) => {
     const userDoc = await getDoc(doc(FIREBASE_DB, "User", userId));
     // Check if the user document exists and return the user data
     if (userDoc.exists()) {
-      console.log('text', userDoc.data());
+      // console.log('text', userDoc.data());
       return userDoc.data(); // Return the data correctly
     } else {
       return null; // Return null if the document does not exist
@@ -233,26 +234,72 @@ const generateMessageId = () => {
   return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
 
-export const fetchMessages = (userId, tutorId, setMessages) => {
+
+export const fetchMessages = (userId, recipientId, setMessages) => {
   const messagesRef = collection(FIREBASE_DB, "Conversations");
 
-  // Query messages between the two users
-  const messagesQuery = query(
+  // Query messages sent from the current user to the recipient
+  const fromUserToRecipient = query(
     messagesRef,
-    where("fromId", "in", [userId, tutorId]), // Fetch messages from either user
-    where("toId", "in", [tutorId, userId]),
-    orderBy("timeStamp", "asc") // Order by time
+    where("fromId", "==", userId),
+    where("toId", "==", recipientId),
+    orderBy("timeStamp", "asc") // Ensure messages are ordered by time
   );
 
-  const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
-    const messages = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
+  // Query messages sent from the recipient to the current user
+  const fromRecipientToUser = query(
+    messagesRef,
+    where("fromId", "==", recipientId),
+    where("toId", "==", userId),
+    orderBy("timeStamp", "asc") // Ensure messages are ordered by time
+  );
+
+  // Listener for messages from user to recipient
+  const unsubscribeFromUserToRecipient = onSnapshot(fromUserToRecipient, (snapshot) => {
+    // Map through snapshot docs to retrieve message data
+    const fromUserMessages = snapshot.docs.map((doc) => ({
+      id: doc.id, // Unique ID for each message
+      ...doc.data(), // Spread the document data
     }));
-    setMessages(messages); // Pass the messages to your state
+
+    setMessages((prevMessages) => {
+      // Combine new messages with the previous state
+      const combinedMessages = [...prevMessages, ...fromUserMessages];
+      // Ensure messages are unique by filtering based on the message ID
+      const uniqueMessages = [
+        ...new Map(combinedMessages.map((msg) => [msg.id, msg])).values(),
+      ];
+      // Sort messages by their timestamp
+      return uniqueMessages.sort((a, b) => a.timeStamp - b.timeStamp);
+    });
   });
 
-  // Return the unsubscribe function to stop listening to updates when no longer needed
-  return unsubscribe;
+  // Listener for messages from recipient to user
+  const unsubscribeFromRecipientToUser = onSnapshot(fromRecipientToUser, (snapshot) => {
+    // Map through snapshot docs to retrieve message data
+    const fromRecipientMessages = snapshot.docs.map((doc) => ({
+      id: doc.id, // Unique ID for each message
+      ...doc.data(), // Spread the document data
+    }));
+
+    setMessages((prevMessages) => {
+      // Combine new messages with the previous state
+      const combinedMessages = [...prevMessages, ...fromRecipientMessages];
+      // Ensure messages are unique by filtering based on the message ID
+      const uniqueMessages = [
+        ...new Map(combinedMessages.map((msg) => [msg.id, msg])).values(),
+      ];
+      // Sort messages by their timestamp
+      return uniqueMessages.sort((a, b) => a.timeStamp - b.timeStamp);
+    });
+  });
+
+  // Return the unsubscribe functions to stop listening when the component unmounts
+  return () => {
+    unsubscribeFromUserToRecipient(); // Stop listening to messages from user to recipient
+    unsubscribeFromRecipientToUser(); // Stop listening to messages from recipient to user
+  };
 };
+
+
 

@@ -7,42 +7,52 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { StatusBar } from "expo-status-bar";
 import StatusBarWrapper from "../components/statusBar";
-import { router } from "expo-router";
-import { icons } from "../../constants";
 import { useNavigation } from "@react-navigation/native";
 import ChatBubble from "../components/ChatBubble";
 import FormField from "../components/FormField";
 import CustomButton from "../components/CustomButton";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import { useLocalSearchParams } from "expo-router";
-import { fetchMessages, sendMessage, fetchRecipientInfo } from "../../lib/firebase";
+import {
+  fetchMessages,
+  sendMessage,
+  fetchRecipientInfo,
+} from "../../lib/firebase";
 import useFirebase from "../../lib/useFirebase";
-
+import { icons } from "../../constants";
 
 const Chat = () => {
-
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
+  const scrollViewRef = useRef(); // Ref for the ScrollView
 
   const { user } = useGlobalContext();
-  const { tutorId } = useLocalSearchParams();
-  const { data: recipientInfo } = useFirebase(() => fetchRecipientInfo(tutorId));
-
+  const { query } = useLocalSearchParams();
+  const { data: recipientInfo } = useFirebase(() => fetchRecipientInfo(query));
 
   useEffect(() => {
-    const unsubscribe = fetchMessages(user.uid, tutorId, setMessages);
+    const unsubscribe = fetchMessages(user.uid, query, setMessages);
     return () => unsubscribe(); // Unsubscribe from Firestore when the component unmounts
-  }, [user.uid, tutorId]);
+  }, [user.uid, query]);
+
+  // Scroll to the bottom whenever a new message is added
+  useEffect(() => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
+  }, [messages]);
 
   const handleSendMessage = () => {
     if (newMessage.trim()) {
-      sendMessage(user.uid, tutorId, newMessage);
+      // Send the message
+      sendMessage(user.uid, query, newMessage);
       setNewMessage(""); // Clear input
+    } else {
+      Alert.alert("Input a message please!");
     }
   };
 
@@ -66,31 +76,37 @@ const Chat = () => {
           <View className="flex-1 w-full">
             <View className="h-12 w-full justify-center">
               <Text className="text-primary text-2xl ml-10 font-bold">
-                {recipientInfo?.fullname ? recipientInfo.fullname : "Loading..."}
+                {recipientInfo?.fullname || "Loading..."} {/* Conditional rendering */}
               </Text>
             </View>
             <View className="flex-1 p-5">
-              <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-              {messages.map((msg) => {
-                if (msg.toId === user.uid) {
-                <ChatBubble
-                  time={msg.timeStamp}
-                  message={msg.message}
-                  isSender={true}
-                />
-                } else {
-                  <ChatBubble
-                  time={msg.timeStamp}
-                  message={msg.message}
-                  isSender={false}
-                />
-                }
-              })}
+              <ScrollView
+                ref={scrollViewRef} // Reference for the ScrollView
+                contentContainerStyle={{ flexGrow: 1 }}
+                showsVerticalScrollIndicator={false}
+                onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })} // Scroll to bottom on content size change
+              >
+                {messages.map((msg) => {
+                  // Ensure the ChatBubble is rendered correctly
+                  const messageTime = msg.timeStamp?.toDate(); // Convert Firestore timestamp to JavaScript Date
+                  const formattedTime = messageTime?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); // Format the time as needed
+
+                  return (
+                    <ChatBubble
+                      key={msg.id} // Ensure each message has a unique key
+                      time={formattedTime} // Pass the formatted time
+                      message={msg.message}
+                      isSender={msg.fromId === user.uid} // Check if the user is the sender
+                    />
+                  );
+                })}
               </ScrollView>
             </View>
             {/* Align FormField and CustomButton */}
             <View className="flex-row items-center bg-[#E5E5E5] px-5 py-3">
               <FormField
+                value={newMessage}
+                handleChangeText={(text) => setNewMessage(text)}
                 placeholder="Insert Text here..."
                 className="flex-1 mr-3"
               />

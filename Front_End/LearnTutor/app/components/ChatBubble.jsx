@@ -4,9 +4,9 @@ import { icons } from "../../constants";
 
 const ChatBubble = ({ message, time, isSender }) => {
   return (
-    <View className={`flex flex-row items-end my-2 ${isSender ? 'justify-end' : 'justify-start'}`}>
-      {/* Display avatar for the receiver */}
-      {!isSender && (
+    <View className={`flex flex-row items-end my-2 ${isSender ? 'justify-start' : 'justify-end'}`}>
+      {/* Display avatar for the sender (reverse the avatar display logic) */}
+      {isSender && (
         <View className="w-8 h-8 bg-gray-300 rounded-full mr-2 self-end">
           <Image source={icons.profile} className="w-full h-full rounded-full" />
         </View>
@@ -23,18 +23,18 @@ const ChatBubble = ({ message, time, isSender }) => {
           ]}
         >
           <Text className="font-semibold" style={styles.bubbleText}>{message}</Text>
-          <View style={[styles.bubbleTip, isSender ? styles.tipRight : styles.tipLeft]} />
+          <View style={[styles.bubbleTip, isSender ? styles.tipLeft : styles.tipRight]} />
         </View>
 
         {/* Timestamp below the chat bubble, aligned opposite to the profile icon */}
         <Text className="font-semibold" 
-        style={[styles.timeText, isSender ? styles.timeLeft : styles.timeRight]}>
+        style={[styles.timeText, isSender ? styles.timeRight : styles.timeLeft]}>
           {time}
         </Text>
       </View>
 
-      {/* Display avatar for the sender */}
-      {isSender && (
+      {/* Display avatar for the receiver */}
+      {!isSender && (
         <View className="w-8 h-8 bg-gray-300 rounded-full ml-2 self-end">
           <Image source={icons.profile} className="w-full h-full rounded-full" />
         </View>
@@ -55,12 +55,12 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   senderBubble: {
-    backgroundColor: '#FEA07D', // Example color for sender's bubble
-    borderBottomRightRadius: 4,
+    backgroundColor: '#4F7978', // Example color for sender's bubble
+    borderBottomLeftRadius: 4,
   },
   receiverBubble: {
-    backgroundColor: '#4F7978', // Example color for receiver's bubble
-    borderBottomLeftRadius: 4,
+    backgroundColor: '#FEA07D' , // Example color for receiver's bubble
+    borderBottomRightRadius: 4,
   },
   bubbleTip: {
     position: 'absolute',
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     left: -12,
     bottom: 0,
     borderColor: 'transparent',
-    borderLeftColor: '#D1D1D1',
+    borderLeftColor: '#FEA07D',
     borderTopColor: 'transparent',
     borderRightWidth: 0,
     borderBottomWidth: 0,
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     right: -12,
     bottom: 0,
     borderColor: 'transparent',
-    borderRightColor: '#FEA07D',
+    borderRightColor: '#4F7978',
     borderTopColor: 'transparent',
     borderLeftWidth: 0,
     borderBottomWidth: 0,
