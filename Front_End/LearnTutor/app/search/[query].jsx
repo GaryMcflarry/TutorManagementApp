@@ -46,11 +46,20 @@ const Chat = () => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
   }, [messages]);
 
+  const isSending = useRef(false);
+
   const handleSendMessage = () => {
     if (newMessage.trim()) {
-      // Send the message
-      sendMessage(user.uid, query, newMessage);
-      setNewMessage(""); // Clear input
+      isSending.current = true; // Mark as sending
+      sendMessage(user.uid, query, newMessage).then(() => {
+        isSending.current = false; // Mark as not sending after send is successful
+        setNewMessage(""); // Clear input
+  
+        // Scroll to the end if the message was sent successfully
+        if (!isSending.current) {
+          scrollViewRef.current?.scrollToEnd({ animated: true });
+        }
+      });
     } else {
       Alert.alert("Input a message please!");
     }
@@ -76,7 +85,9 @@ const Chat = () => {
           <View className="flex-1 w-full">
             <View className="h-12 w-full justify-center">
               <Text className="text-primary text-2xl ml-10 font-bold">
-                {recipientInfo?.fullname || "Loading..."} {/* Conditional rendering */}
+                {recipientInfo?.fullname
+                  ? recipientInfo.fullname
+                  : "Loading..."}
               </Text>
             </View>
             <View className="flex-1 p-5">
@@ -89,7 +100,7 @@ const Chat = () => {
                 {messages.map((msg) => {
                   // Ensure the ChatBubble is rendered correctly
                   const messageTime = msg.timeStamp?.toDate(); // Convert Firestore timestamp to JavaScript Date
-                  const formattedTime = messageTime?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); // Format the time as needed
+                  const formattedTime = messageTime?.toLocaleTimeString(); // Format the time as needed
 
                   return (
                     <ChatBubble

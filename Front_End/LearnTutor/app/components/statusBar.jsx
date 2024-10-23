@@ -21,9 +21,9 @@ const StatusBarWrapper = ({ children, title }) => {
     //appwrite function occurs to remove the session
     await signOut();
     //routes to the register page
-    router.replace("(auth)/sign-in");
+    router.replace("/sign-in");
     //removes the data of the current logged in user
-    setUser(null);
+    // setUser(null);
     //sets the state establishing that no user is logged in anymore
     setIsLoggedIn(false);
   };

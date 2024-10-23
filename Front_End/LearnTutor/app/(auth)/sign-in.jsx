@@ -24,11 +24,17 @@ const signIn = () => {
 
   const signIn = async () => {
     
+
+
     if (!email || !password) {
       Alert.alert("Error", "Please fill in all the fields");
       return null;
     }
     
+
+    
+
+
     setLoading(true);
 
     try {
