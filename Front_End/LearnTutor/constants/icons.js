@@ -13,6 +13,11 @@ import eye from "../assets/icons/eye.png";
 import play from "../assets/icons/play.png";
 import timetable from "../assets/icons/timetable.png";
 import chat from "../assets/icons/chat.png";
+import WhatsAppIcon from "../assets/icons/WhatsAppIcon.png";
+import MicrosoftTeamsIcon from "../assets/icons/MicrosoftTeamsIcon.png";
+import TutorResourceCardIcon from "../assets/icons/TutorResourceCardIcon.png";
+import TelegramIcon from "../assets/icons/TelegramIcon.png";
+import GoogleMeetIcon from "../assets/icons/GoogleMeetIcon.png";
 
 export default {
   play,
@@ -29,5 +34,10 @@ export default {
   eyeHide,
   eye,
   chat,
-  timetable
+  timetable,
+  WhatsAppIcon,
+  MicrosoftTeamsIcon,
+  TutorResourceCardIcon,
+  TelegramIcon,
+  GoogleMeetIcon
 };

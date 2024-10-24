@@ -5,11 +5,21 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   getReactNativePersistence,
-  initializeAuth
+  initializeAuth,
 } from "firebase/auth";
-import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
-import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
-
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  collection,
+  query,
+  where,
+  onSnapshot,
+  orderBy,
+  serverTimestamp
+} from "firebase/firestore";
+import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -65,7 +75,7 @@ export const createUser = async (email, password) => {
   }
 };
 
-// Function to sign in a user
+// Function to sign in a user (Sign-in Page)
 export const login = async (email, password) => {
   try {
     const userCredential = await signInWithEmailAndPassword(
@@ -80,37 +90,45 @@ export const login = async (email, password) => {
   }
 };
 
+//Function for signing out of the application
 export const signOut = async () => {
   try {
-    await FIREBASE_AUTH.signOut()
+    await FIREBASE_AUTH.signOut();
   } catch (error) {
     throw new Error(error);
   }
 };
 
-// Function to get the current user's data
+//Function for fetching information on the current logged in user (Globalcontext)
 export const getCurrentUser = async () => {
   try {
     const currentUser = FIREBASE_AUTH.currentUser;
     if (!currentUser) {
-        console.log("No user is currently signed in")
-        return null;
+      console.log("No user is currently signed in");
+      return null;
     } else {
-        // console.log('Current User: ', currentUser);
-        const userDoc = await getDoc(doc(FIREBASE_DB, "User", currentUser.uid));
-        return userDoc.exists() ? userDoc.data() : null;
-    }
+      // Fetch user document from Firestore
+      const userDoc = await getDoc(doc(FIREBASE_DB, "User", currentUser.uid));
 
+      // Check if the user document exists and return the user data with UID
+      if (userDoc.exists()) {
+        return { uid: currentUser.uid, ...userDoc.data() }; // Include the UID in the returned data
+      } else {
+        return null; // Return null if the document does not exist
+      }
+    }
   } catch (error) {
     console.error("Error fetching current user:", error);
+    return null; // Return null in case of an error
   }
 };
 
+//function for getting the tutor links based on the student (Home Page)
 export const getTutorInfoByStudent = async (user) => {
   try {
     // Get the array of tutor IDs (ensure it's an array)
     const tutorIds = user?.tutors;
-    
+
     if (!Array.isArray(tutorIds) || tutorIds.length === 0) {
       console.log("No tutor IDs found.");
       return [];
@@ -118,7 +136,7 @@ export const getTutorInfoByStudent = async (user) => {
 
     // Fetch tutor data for each tutorId, by converting them into document references
     const tutorPromises = tutorIds.map(async (tutorId) => {
-      if (!tutorId || typeof tutorId !== 'string') {
+      if (!tutorId || typeof tutorId !== "string") {
         console.warn("Invalid tutor ID:", tutorId);
         return null; // Skip invalid IDs
       }
@@ -129,9 +147,159 @@ export const getTutorInfoByStudent = async (user) => {
 
     // Wait for all promises to resolve
     const tutorDataArray = await Promise.all(tutorPromises);
-    return tutorDataArray.filter(tutor => tutor !== null); // Filter out any null responses
+    // console.log("TEST: ", tutorDataArray);
+    return tutorDataArray.filter((tutor) => tutor !== null); // Filter out any null responses
   } catch (error) {
     console.error("Error fetching tutor data:", error);
     return [];
-  } 
-}
+  }
+};
+
+//function for getting connected contacts for the current logged in user (Convo Page)
+export const getContacts = async (user) => {
+  if (!user) return [];
+
+  let connectedUsers = [];
+
+  try {
+    // If the logged-in user is a student, fetch their tutors
+    if (user.status === "student") {
+      const tutorRefs = user.tutors || []; // Ensure `user.tutors` is an array
+      const tutorPromises = tutorRefs.map(async (tutorId) => {
+        const tutorDoc = await getDoc(doc(FIREBASE_DB, "User", tutorId)); // Fetch tutor document
+        if (tutorDoc.exists()) {
+          return { id: tutorDoc.id, ...tutorDoc.data() }; // Include the id in the returned data
+        }
+        return null;
+      });
+      connectedUsers = await Promise.all(tutorPromises);
+
+      // If the logged-in user is a tutor, fetch their students
+    } else if (user.status === "tutor") {
+      const studentRefs = user.students || []; // Ensure `user.students` is an array
+      const studentPromises = studentRefs.map(async (studentId) => {
+        const studentDoc = await getDoc(doc(FIREBASE_DB, "User", studentId)); // Fetch student document
+        if (studentDoc.exists()) {
+          return { id: studentDoc.id, ...studentDoc.data() }; // Include the id in the returned data
+        }
+        return null;
+      });
+      connectedUsers = await Promise.all(studentPromises);
+    }
+  } catch (error) {
+    console.error("Error fetching connected users: ", error);
+  }
+
+  return connectedUsers.filter(Boolean); // Filter out null values
+};
+
+
+export const fetchRecipientInfo = async (userId) => {
+  try {
+    // Fetch user document from Firestore
+    const userDoc = await getDoc(doc(FIREBASE_DB, "User", userId));
+    // Check if the user document exists and return the user data
+    if (userDoc.exists()) {
+      // console.log('text', userDoc.data());
+      return userDoc.data(); // Return the data correctly
+    } else {
+      return null; // Return null if the document does not exist
+    }
+  } catch (error) {
+    console.error("Error fetching recipient info: ", error);
+  }
+};
+
+
+export const sendMessage = async (fromId, toId, messageContent) => {
+  try {
+    const newMessageRef = doc(
+      FIREBASE_DB,
+      "Conversations",
+      generateMessageId()
+    ); // Generate a new message ID
+    await setDoc(newMessageRef, {
+      fromId: fromId,
+      message: messageContent,
+      timeStamp: serverTimestamp(), // Set server-side timestamp
+      toId: toId,
+    });
+    console.log("Message sent successfully!");
+  } catch (error) {
+    console.error("Error sending message: ", error);
+  }
+};
+// Helper function to generate a unique message ID
+const generateMessageId = () => {
+  return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+};
+
+
+export const fetchMessages = (userId, recipientId, setMessages) => {
+  const messagesRef = collection(FIREBASE_DB, "Conversations");
+
+  // Query messages sent from the current user to the recipient
+  const fromUserToRecipient = query(
+    messagesRef,
+    where("fromId", "==", userId),
+    where("toId", "==", recipientId),
+    orderBy("timeStamp", "asc") // Ensure messages are ordered by time
+  );
+
+  // Query messages sent from the recipient to the current user
+  const fromRecipientToUser = query(
+    messagesRef,
+    where("fromId", "==", recipientId),
+    where("toId", "==", userId),
+    orderBy("timeStamp", "asc") // Ensure messages are ordered by time
+  );
+
+  // Listener for messages from user to recipient
+  const unsubscribeFromUserToRecipient = onSnapshot(fromUserToRecipient, (snapshot) => {
+    // Map through snapshot docs to retrieve message data
+    const fromUserMessages = snapshot.docs.map((doc) => ({
+      id: doc.id, // Unique ID for each message
+      ...doc.data(), // Spread the document data
+    }));
+
+    setMessages((prevMessages) => {
+      // Combine new messages with the previous state
+      const combinedMessages = [...prevMessages, ...fromUserMessages];
+      // Ensure messages are unique by filtering based on the message ID
+      const uniqueMessages = [
+        ...new Map(combinedMessages.map((msg) => [msg.id, msg])).values(),
+      ];
+      // Sort messages by their timestamp
+      return uniqueMessages.sort((a, b) => a.timeStamp - b.timeStamp);
+    });
+  });
+
+  // Listener for messages from recipient to user
+  const unsubscribeFromRecipientToUser = onSnapshot(fromRecipientToUser, (snapshot) => {
+    // Map through snapshot docs to retrieve message data
+    const fromRecipientMessages = snapshot.docs.map((doc) => ({
+      id: doc.id, // Unique ID for each message
+      ...doc.data(), // Spread the document data
+    }));
+
+    setMessages((prevMessages) => {
+      // Combine new messages with the previous state
+      const combinedMessages = [...prevMessages, ...fromRecipientMessages];
+      // Ensure messages are unique by filtering based on the message ID
+      const uniqueMessages = [
+        ...new Map(combinedMessages.map((msg) => [msg.id, msg])).values(),
+      ];
+      // Sort messages by their timestamp
+      return uniqueMessages.sort((a, b) => a.timeStamp - b.timeStamp);
+    });
+  });
+
+  // Return the unsubscribe functions to stop listening when the component unmounts
+  return () => {
+    unsubscribeFromUserToRecipient(); // Stop listening to messages from user to recipient
+    unsubscribeFromRecipientToUser(); // Stop listening to messages from recipient to user
+  };
+};
+
+
+
