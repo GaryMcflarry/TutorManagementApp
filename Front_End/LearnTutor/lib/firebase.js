@@ -17,7 +17,7 @@ import {
   where,
   onSnapshot,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
 } from "firebase/firestore";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -123,40 +123,8 @@ export const getCurrentUser = async () => {
   }
 };
 
-//function for getting the tutor links based on the student (Home Page)
-export const getTutorInfoByStudent = async (user) => {
-  try {
-    // Get the array of tutor IDs (ensure it's an array)
-    const tutorIds = user?.tutors;
-
-    if (!Array.isArray(tutorIds) || tutorIds.length === 0) {
-      console.log("No tutor IDs found.");
-      return [];
-    }
-
-    // Fetch tutor data for each tutorId, by converting them into document references
-    const tutorPromises = tutorIds.map(async (tutorId) => {
-      if (!tutorId || typeof tutorId !== "string") {
-        console.warn("Invalid tutor ID:", tutorId);
-        return null; // Skip invalid IDs
-      }
-
-      const tutorDoc = await getDoc(doc(FIREBASE_DB, "User", tutorId));
-      return tutorDoc.exists() ? tutorDoc.data() : null;
-    });
-
-    // Wait for all promises to resolve
-    const tutorDataArray = await Promise.all(tutorPromises);
-    // console.log("TEST: ", tutorDataArray);
-    return tutorDataArray.filter((tutor) => tutor !== null); // Filter out any null responses
-  } catch (error) {
-    console.error("Error fetching tutor data:", error);
-    return [];
-  }
-};
-
 //function for getting connected contacts for the current logged in user (Convo Page)
-export const getContacts = async (user) => {
+export const getConnectedUsers = async (user) => {
   if (!user) return [];
 
   let connectedUsers = [];
@@ -173,7 +141,7 @@ export const getContacts = async (user) => {
         return null;
       });
       connectedUsers = await Promise.all(tutorPromises);
-
+      
       // If the logged-in user is a tutor, fetch their students
     } else if (user.status === "tutor") {
       const studentRefs = user.students || []; // Ensure `user.students` is an array
@@ -189,10 +157,9 @@ export const getContacts = async (user) => {
   } catch (error) {
     console.error("Error fetching connected users: ", error);
   }
-
+  // console.log("Connected Users: ", connectedUsers);
   return connectedUsers.filter(Boolean); // Filter out null values
 };
-
 
 export const fetchRecipientInfo = async (userId) => {
   try {
@@ -209,7 +176,6 @@ export const fetchRecipientInfo = async (userId) => {
     console.error("Error fetching recipient info: ", error);
   }
 };
-
 
 export const sendMessage = async (fromId, toId, messageContent) => {
   try {
@@ -234,7 +200,6 @@ const generateMessageId = () => {
   return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
 
-
 export const fetchMessages = (userId, recipientId, setMessages) => {
   const messagesRef = collection(FIREBASE_DB, "Conversations");
 
@@ -255,44 +220,50 @@ export const fetchMessages = (userId, recipientId, setMessages) => {
   );
 
   // Listener for messages from user to recipient
-  const unsubscribeFromUserToRecipient = onSnapshot(fromUserToRecipient, (snapshot) => {
-    // Map through snapshot docs to retrieve message data
-    const fromUserMessages = snapshot.docs.map((doc) => ({
-      id: doc.id, // Unique ID for each message
-      ...doc.data(), // Spread the document data
-    }));
+  const unsubscribeFromUserToRecipient = onSnapshot(
+    fromUserToRecipient,
+    (snapshot) => {
+      // Map through snapshot docs to retrieve message data
+      const fromUserMessages = snapshot.docs.map((doc) => ({
+        id: doc.id, // Unique ID for each message
+        ...doc.data(), // Spread the document data
+      }));
 
-    setMessages((prevMessages) => {
-      // Combine new messages with the previous state
-      const combinedMessages = [...prevMessages, ...fromUserMessages];
-      // Ensure messages are unique by filtering based on the message ID
-      const uniqueMessages = [
-        ...new Map(combinedMessages.map((msg) => [msg.id, msg])).values(),
-      ];
-      // Sort messages by their timestamp
-      return uniqueMessages.sort((a, b) => a.timeStamp - b.timeStamp);
-    });
-  });
+      setMessages((prevMessages) => {
+        // Combine new messages with the previous state
+        const combinedMessages = [...prevMessages, ...fromUserMessages];
+        // Ensure messages are unique by filtering based on the message ID
+        const uniqueMessages = [
+          ...new Map(combinedMessages.map((msg) => [msg.id, msg])).values(),
+        ];
+        // Sort messages by their timestamp
+        return uniqueMessages.sort((a, b) => a.timeStamp - b.timeStamp);
+      });
+    }
+  );
 
   // Listener for messages from recipient to user
-  const unsubscribeFromRecipientToUser = onSnapshot(fromRecipientToUser, (snapshot) => {
-    // Map through snapshot docs to retrieve message data
-    const fromRecipientMessages = snapshot.docs.map((doc) => ({
-      id: doc.id, // Unique ID for each message
-      ...doc.data(), // Spread the document data
-    }));
+  const unsubscribeFromRecipientToUser = onSnapshot(
+    fromRecipientToUser,
+    (snapshot) => {
+      // Map through snapshot docs to retrieve message data
+      const fromRecipientMessages = snapshot.docs.map((doc) => ({
+        id: doc.id, // Unique ID for each message
+        ...doc.data(), // Spread the document data
+      }));
 
-    setMessages((prevMessages) => {
-      // Combine new messages with the previous state
-      const combinedMessages = [...prevMessages, ...fromRecipientMessages];
-      // Ensure messages are unique by filtering based on the message ID
-      const uniqueMessages = [
-        ...new Map(combinedMessages.map((msg) => [msg.id, msg])).values(),
-      ];
-      // Sort messages by their timestamp
-      return uniqueMessages.sort((a, b) => a.timeStamp - b.timeStamp);
-    });
-  });
+      setMessages((prevMessages) => {
+        // Combine new messages with the previous state
+        const combinedMessages = [...prevMessages, ...fromRecipientMessages];
+        // Ensure messages are unique by filtering based on the message ID
+        const uniqueMessages = [
+          ...new Map(combinedMessages.map((msg) => [msg.id, msg])).values(),
+        ];
+        // Sort messages by their timestamp
+        return uniqueMessages.sort((a, b) => a.timeStamp - b.timeStamp);
+      });
+    }
+  );
 
   // Return the unsubscribe functions to stop listening when the component unmounts
   return () => {
@@ -301,5 +272,56 @@ export const fetchMessages = (userId, recipientId, setMessages) => {
   };
 };
 
+export const submittingHomework = async (studId, tutorId, subject, description, dueDate) => {
+  try {
+    const newHWRef = doc(
+      FIREBASE_DB,
+      "Homework",
+      generateMessageId()
+    ); // Generate a new message ID
+    await setDoc(newHWRef, {
+      completed: false,
+      description: description,
+      dueDate: dueDate,
+      studentId: studId,
+      subject: subject,
+      tutorId: tutorId
+    });
+    console.log("Homework submitted successfully!");
+  } catch (error) {
+    console.error("Error sending message: ", error);
+  }
+};
 
 
+export const fetchHomework = (userId) => {
+  const homeworkRef = collection(FIREBASE_DB, "Homework");
+
+  
+  const homeworkForId = query(
+    homeworkRef,
+    where("studentId", "==", userId),
+    where("tutorId", "==", userId),
+    orderBy("subject", "asc") 
+  );
+
+  
+  const unsubscribeFromHomeworkFetch = onSnapshot(
+    homeworkForId,
+    (snapshot) => {
+      
+      const homework = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(), 
+      }));
+
+      console.log("User Homework: ", homework);
+    }
+  );
+
+  
+  return () => {
+     
+    unsubscribeFromHomeworkFetch(); 
+  };
+};

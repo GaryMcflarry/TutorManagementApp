@@ -5,7 +5,7 @@ import StatusBarWrapper from "../components/statusBar";
 import MenuButton from "../components/MenuButton";
 import ResourceCard from "../components/ResourceCard";
 import { useGlobalContext } from "../../context/GlobalProvider";
-import { getTutorInfoByStudent } from "../../lib/firebase";
+import { getConnectedUsers } from "../../lib/firebase";
 import useFirebase from "../../lib/useFirebase";
 import { Dropdown } from "react-native-element-dropdown";
 
@@ -21,7 +21,7 @@ const getSubjectOptions = (user) => {
 const Home = ({ navigation }) => {
   const { user } = useGlobalContext();
   const { data: tutorInfo, refetch } = useFirebase(() =>
-    getTutorInfoByStudent(user)
+    getConnectedUsers(user)
   );
 
   const [refreshing, setRefreshing] = useState(false);

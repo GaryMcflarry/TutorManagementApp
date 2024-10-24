@@ -8,7 +8,7 @@ import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import useFirebase from "../../lib/useFirebase"; 
-import { getContacts } from "../../lib/firebase"; 
+import { getConnectedusers, getContacts } from "../../lib/firebase"; 
 import { images } from "../../constants";
 
 const Conversations = ({ navigation }) => {
@@ -26,7 +26,7 @@ const Conversations = ({ navigation }) => {
  useEffect(() => {
   const fetchContacts = async () => {
     try {
-      const usersData = await getContacts(user); // Fetch users from Firebase
+      const usersData = await getConnectedusers(user); // Fetch users from Firebase
       setConnectedUsers(usersData);
       setFilteredUsers(usersData); // Initialize with full list
       // console.log("Connected Users: ", filteredUsers); // Proper logging after fetch
