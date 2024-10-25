@@ -1,4 +1,12 @@
-import { ScrollView, StyleSheet, Text, View, Modal, Alert } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  Modal,
+  Alert,
+  FlatList,
+} from "react-native";
 import React, { useState, useEffect } from "react";
 import StatusBarWrapper from "../components/statusBar";
 import MenuButton from "../components/MenuButton";
@@ -9,7 +17,11 @@ import { useGlobalContext } from "../../context/GlobalProvider";
 import { TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Dropdown } from "react-native-element-dropdown";
-import { fetchHomework, getConnectedUsers, submittingHomework } from "../../lib/firebase";
+import {
+  fetchHomework,
+  getConnectedUsers,
+  submittingHomework,
+} from "../../lib/firebase";
 import useFirebase from "../../lib/useFirebase";
 import DateTimePicker from "react-native-ui-datepicker";
 import dayjs from "dayjs";
@@ -21,56 +33,55 @@ const Homework = ({ navigation }) => {
   );
   const currentDate = dayjs();
   const getStudentOptions = (studentInfo) => {
-    // Check if studentInfo exists and has valid data
     if (!studentInfo || studentInfo.length === 0) {
       return [];
     }
-
-    // Map student data into label-value pairs
     return studentInfo.map((user) => ({
       label: user.fullname,
       value: user.id,
     }));
   };
   const studentOptions = getStudentOptions(studentInfo);
-  //console.log("HW PAGE students: ", studentOptions);
   const [modalVisible, setModalVisible] = useState(false);
-
   const [student, setStudent] = useState("");
   const [date, setDate] = useState(dayjs());
   const [description, setDescription] = useState("");
-
-  const [homework, setHomework] = useState([]);
+  const [groupedHomework, setGroupedHomework] = useState({});
 
   useEffect(() => {
-    const unsubscribe = fetchHomework(user.uid);
-    return () => unsubscribe(); // Unsubscribe from Firestore when the component unmounts
+    const unsubscribe = fetchHomework(
+      user.uid,
+      user.status,
+      setGroupedHomework
+    );
+    return () => unsubscribe();
   }, [user.uid]);
 
   const submitHomework = () => {
     if (student === "" || description === "" || date === "") {
       Alert.alert("Please Input all fields!");
-      return; // Exit if fields are not filled
+      return;
     }
-    console.log("Tutor Id: ", user.uid);
-    console.log("Selected Student: ", student.value);
-    // Check if studentInfo exists and has the selected student's data
+
     const selectedStudent = studentInfo.find((s) => s.id === student.value);
 
     if (selectedStudent && selectedStudent.subject && user.subject) {
-      const matchingSubjects = selectedStudent.subject.filter((subject) =>
+      const matchingSubject = selectedStudent.subject.find((subject) =>
         user.subject.includes(subject)
       );
 
-      if (matchingSubjects.length > 0) {
-        console.log("Matching subjects: ", matchingSubjects);
+      if (matchingSubject) {
+        const dayjsDate = dayjs(date);
+        const formattedDate = dayjsDate.format("DD/MM HH:mm");
+
         submittingHomework(
           student.value,
           user.uid,
-          matchingSubjects,
+          matchingSubject,
           description,
-          date
+          formattedDate
         );
+
         setModalVisible(!modalVisible);
       } else {
         console.log("No matching subjects.");
@@ -79,17 +90,13 @@ const Homework = ({ navigation }) => {
       Alert.alert("Selected student info or subjects not found.");
     }
 
-    console.log("Description: ", description);
-    console.log("Selected Date: ", date);
-    // Call the function to submit homework, for example:
-    // submittingHomework(student.value, user.uid, matchingSubjects, description, date);
     setDate(dayjs());
     setDescription("");
     setStudent("");
   };
 
   return (
-    <SafeAreaView>
+    <SafeAreaView style={{ flex: 1 }}>
       <StatusBarWrapper title="Homework">
         <Modal
           animationType="fade"
@@ -170,11 +177,37 @@ const Homework = ({ navigation }) => {
           <MenuButton handlePress={() => navigation.toggleDrawer()} />
         </View>
 
-        {/* <ScrollView className="bg-teal-500 w-full h-full">
-          <View className="h-full w-full justify-start items-center p-3">
-            {/* <HomeWorkCard data={data} /> 
-          </View>
-        </ScrollView> */}
+        <View className="justify-center" style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 10 }}>
+          {Object.keys(groupedHomework).length === 0 ? (
+            <Text className="align-center  text-[#888] text-lg">
+              No Homework Assigned
+            </Text>
+          ) : (
+            <FlatList
+              scrollEnabled
+              data={Object.keys(groupedHomework)}
+              keyExtractor={(subject) => subject}
+              renderItem={({ item: subject }) => {
+                const homeworkItems = groupedHomework[subject];
+                const recipientName =
+                  homeworkItems.length > 0
+                    ? homeworkItems[0].recipientName
+                    : "Unknown";
+
+                return (
+                  <HomeWorkCard
+                    key={subject}
+                    subject={subject}
+                    homeworkItems={homeworkItems}
+                    recipientName={recipientName}
+                    userStatus={user.status}
+                  />
+                );
+              }}
+              contentContainerStyle={{ paddingBottom: 20 }}
+            />
+          )}
+        </View>
       </StatusBarWrapper>
     </SafeAreaView>
   );
@@ -191,11 +224,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  button: {
-    borderRadius: 20,
-    padding: 10,
-    elevation: 2,
-  },
   textStyle: {
     color: "white",
     fontWeight: "bold",
@@ -208,23 +236,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 8,
-    backgroundColor: "#4F7978", // Dropdown background color
+    backgroundColor: "#4F7978", 
     marginBottom: 20,
   },
   placeholderStyle: {
-    color: "#FFFFFF", // Placeholder text color
+    color: "#FFFFFF", 
     fontSize: 16,
   },
   selectedTextStyle: {
-    color: "#FFFFFF", // Selected text color
+    color: "#FFFFFF", 
     fontSize: 16,
   },
   itemTextStyle: {
-    color: "#000000", // Dropdown items text color
+    color: "#000000", 
     fontSize: 16,
   },
   iconStyle: {
-    tintColor: "#FFFFFF", // Arrow icon color
+    tintColor: "#FFFFFF", 
   },
 });
 

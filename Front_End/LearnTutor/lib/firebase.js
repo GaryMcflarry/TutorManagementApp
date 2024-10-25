@@ -18,6 +18,7 @@ import {
   onSnapshot,
   orderBy,
   serverTimestamp,
+  deleteDoc
 } from "firebase/firestore";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -294,34 +295,55 @@ export const submittingHomework = async (studId, tutorId, subject, description, 
 };
 
 
-export const fetchHomework = (userId) => {
+export const fetchHomework = (userId, userRole, setGroupedHomework) => {
   const homeworkRef = collection(FIREBASE_DB, "Homework");
-
-  
   const homeworkForId = query(
     homeworkRef,
-    where("studentId", "==", userId),
-    where("tutorId", "==", userId),
-    orderBy("subject", "asc") 
+    where(userRole === "student" ? "studentId" : "tutorId", "==", userId),
+    orderBy("subject", "asc")
   );
 
-  
-  const unsubscribeFromHomeworkFetch = onSnapshot(
-    homeworkForId,
-    (snapshot) => {
-      
-      const homework = snapshot.docs.map((doc) => ({
+  return onSnapshot(homeworkForId, async (snapshot) => {
+    const homeworkPromises = snapshot.docs.map(async (doc) => {
+      const data = doc.data();
+      const oppositeId = userRole === "student" ? data.tutorId : data.studentId;
+      const recipientInfo = await fetchRecipientInfo(oppositeId);
+      return {
         id: doc.id,
-        ...doc.data(), 
-      }));
+        recipientName: recipientInfo ? recipientInfo.fullname : 'Unknown',
+        ...data,
+      };
+    });
 
-      console.log("User Homework: ", homework);
-    }
-  );
+    // Wait for all recipient info to be fetched
+    const homework = await Promise.all(homeworkPromises);
 
-  
-  return () => {
-     
-    unsubscribeFromHomeworkFetch(); 
-  };
+    // Group homework by subject
+    const groupedHomework = homework.reduce((groups, item) => {
+      const { subject } = item;
+      if (!groups[subject]) {
+        groups[subject] = [];
+      }
+      groups[subject].push(item);
+      return groups;
+    }, {});
+
+    // Set the grouped homework
+    setGroupedHomework(groupedHomework);
+  });
 };
+
+
+export const deleteHomework = async (itemId) => {
+  try {
+    // Get a reference to the specific document within the Homework collection
+    const homeworkDocRef = doc(FIREBASE_DB, 'Homework', itemId);
+    await deleteDoc(homeworkDocRef); // Delete the document using deleteDoc
+    console.log(`Homework with ID: ${itemId} deleted successfully.`);
+    return true; // Optionally return true to indicate success
+  } catch (error) {
+    console.error("Error deleting homework: ", error);
+    return false; // Optionally return false to indicate failure
+  }
+};
+
