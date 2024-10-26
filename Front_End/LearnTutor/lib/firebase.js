@@ -173,6 +173,12 @@ export const fetchRecipientInfo = async (userId) => {
   }
 };
 
+
+
+
+
+
+
 export const sendMessage = async (fromId, toId, messageContent) => {
   try {
     const newMessageRef = doc(
@@ -268,6 +274,13 @@ export const fetchMessages = (userId, recipientId, setMessages) => {
   };
 };
 
+
+
+
+
+
+
+
 export const submittingHomework = async (studId, tutorId, subject, description, dueDate) => {
   try {
     const newHWRef = doc(
@@ -276,14 +289,13 @@ export const submittingHomework = async (studId, tutorId, subject, description, 
       generateMessageId()
     ); // Generate a new message ID
     await setDoc(newHWRef, {
-      completed: false,
       description: description,
       dueDate: dueDate,
       studentId: studId,
       subject: subject,
       tutorId: tutorId
     });
-    console.log("Homework submitted successfully!");
+    // console.log("Homework submitted successfully!");
   } catch (error) {
     console.error("Error sending message: ", error);
   }
@@ -324,6 +336,7 @@ export const fetchHomework = (userId, userRole, setGroupedHomework) => {
     }, {});
 
     // Set the grouped homework
+    // console.log("Grouped Homework: ", groupedHomework)
     setGroupedHomework(groupedHomework);
   });
 };
@@ -334,7 +347,7 @@ export const deleteHomework = async (itemId) => {
     // Get a reference to the specific document within the Homework collection
     const homeworkDocRef = doc(FIREBASE_DB, 'Homework', itemId);
     await deleteDoc(homeworkDocRef); // Delete the document using deleteDoc
-    console.log(`Homework with ID: ${itemId} deleted successfully.`);
+    // console.log(`Homework with ID: ${itemId} deleted successfully.`);
     return true; // Optionally return true to indicate success
   } catch (error) {
     console.error("Error deleting homework: ", error);

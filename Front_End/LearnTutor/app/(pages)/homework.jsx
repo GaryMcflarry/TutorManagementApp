@@ -28,24 +28,42 @@ import dayjs from "dayjs";
 
 const Homework = ({ navigation }) => {
   const { user } = useGlobalContext();
-  const { data: studentInfo, refetch } = useFirebase(() =>
+  const { data: userInfo, refetch } = useFirebase(() =>
     getConnectedUsers(user)
   );
-  const currentDate = dayjs();
-  const getStudentOptions = (studentInfo) => {
-    if (!studentInfo || studentInfo.length === 0) {
-      return [];
-    }
-    return studentInfo.map((user) => ({
-      label: user.fullname,
-      value: user.id,
-    }));
+
+  const getStudentOptions = (users) => {
+    // Check if users is an array and has at least one user
+    if (!Array.isArray(users) || users.length === 0) return [];
+  
+    // Initialize an array to hold all student options
+    let options = [];
+  
+    users.forEach((user) => {
+      if (user !== null) {
+        // Push the formatted option for valid users into the options array
+        options.push({
+          label: `${user.fullname} (${user.subject})`, // Format label to include subject
+          value: user.id, // Use user ID as value
+        });
+      }
+    });
+  
+    return options;
   };
-  const studentOptions = getStudentOptions(studentInfo);
+  
+  // Usage example
+  const studentOptions = getStudentOptions(userInfo); // Pass the entire array
+  // console.log(studentOptions);
+
   const [modalVisible, setModalVisible] = useState(false);
+
   const [student, setStudent] = useState("");
+
   const [date, setDate] = useState(dayjs());
+
   const [description, setDescription] = useState("");
+
   const [groupedHomework, setGroupedHomework] = useState({});
 
   useEffect(() => {
@@ -58,39 +76,47 @@ const Homework = ({ navigation }) => {
   }, [user.uid]);
 
   const submitHomework = () => {
+    // Check for empty fields
     if (student === "" || description === "" || date === "") {
       Alert.alert("Please Input all fields!");
       return;
     }
-
-    const selectedStudent = studentInfo.find((s) => s.id === student.value);
-
-    if (selectedStudent && selectedStudent.subject && user.subject) {
-      const matchingSubject = selectedStudent.subject.find((subject) =>
-        user.subject.includes(subject)
-      );
-
-      if (matchingSubject) {
-        const dayjsDate = dayjs(date);
-        const formattedDate = dayjsDate.format("DD/MM HH:mm");
-
-        submittingHomework(
-          student.value,
-          user.uid,
-          matchingSubject,
-          description,
-          formattedDate
-        );
-
-        setModalVisible(!modalVisible);
-      } else {
-        console.log("No matching subjects.");
-      }
-    } else {
-      Alert.alert("Selected student info or subjects not found.");
+  
+    // Find the selected student
+    const selectedStudent = userInfo.find((s) => s.id === student.value);
+  
+    // Check if the selected student exists
+    if (!selectedStudent) {
+      Alert.alert("Selected student not found.");
+      return;
     }
-
-    setDate(dayjs());
+  
+    // Get the subject of the selected student
+    const matchingSubject = selectedStudent.subject;
+  
+    // Check if a matching subject exists
+    if (!matchingSubject) {
+      console.log("No matching subjects.");
+      Alert.alert("No matching subjects found for the selected student.");
+      return;
+    }
+  
+    // Format the date using dayjs
+    const dayjsDate = dayjs(date);
+    const formattedDate = dayjsDate.format("DD/MM HH:mm");
+  
+    // Submit the homework
+    submittingHomework(
+      student.value,
+      user.uid,
+      matchingSubject,
+      description,
+      formattedDate
+    );
+  
+    // Reset form fields and close modal
+    setModalVisible(false);
+    setDate(dayjs()); // Reset to current date/time
     setDescription("");
     setStudent("");
   };
@@ -177,7 +203,10 @@ const Homework = ({ navigation }) => {
           <MenuButton handlePress={() => navigation.toggleDrawer()} />
         </View>
 
-        <View className="justify-center" style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 10 }}>
+        <View
+          className="justify-start items-center"
+          style={{ flex: 1, justifyContent: "center", paddingHorizontal: 10 }}
+        >
           {Object.keys(groupedHomework).length === 0 ? (
             <Text className="align-center  text-[#888] text-lg">
               No Homework Assigned
@@ -236,23 +265,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 8,
-    backgroundColor: "#4F7978", 
+    backgroundColor: "#4F7978",
     marginBottom: 20,
   },
   placeholderStyle: {
-    color: "#FFFFFF", 
+    color: "#FFFFFF",
     fontSize: 16,
   },
   selectedTextStyle: {
-    color: "#FFFFFF", 
+    color: "#FFFFFF",
     fontSize: 16,
   },
   itemTextStyle: {
-    color: "#000000", 
+    color: "#000000",
     fontSize: 16,
   },
   iconStyle: {
-    tintColor: "#FFFFFF", 
+    tintColor: "#FFFFFF",
   },
 });
 
