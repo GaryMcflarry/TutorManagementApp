@@ -118,7 +118,7 @@ const Chat = () => {
               <FormField
                 value={newMessage}
                 handleChangeText={(text) => setNewMessage(text)}
-                placeholder="Insert Text here..."
+                placeholder="Insert text here..."
                 className="flex-1 mr-3"
               />
               <CustomButton

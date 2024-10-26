@@ -12,13 +12,14 @@ import {
   doc,
   setDoc,
   getDoc,
+  getDocs,
   collection,
   query,
   where,
   onSnapshot,
   orderBy,
   serverTimestamp,
-  deleteDoc
+  deleteDoc,
 } from "firebase/firestore";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -41,7 +42,7 @@ const FIREBASE_AUTH = initializeAuth(FIREBASE_APP, {
 const FIREBASE_DB = getFirestore(FIREBASE_APP);
 
 // Function to create a new user
-export const createUser = async (email, password) => {
+export const createAdmin = async (email, password) => {
   try {
     // Create a new user with Firebase Authentication
     const userCredential = await createUserWithEmailAndPassword(
@@ -55,20 +56,42 @@ export const createUser = async (email, password) => {
     await setDoc(doc(FIREBASE_DB, "User", userId), {
       email: email,
       password: password,
-      grade: null,
-      address: null,
-      availability: null,
-      chatLink: null,
-      meetingLink: null,
-      status: null,
-      students: null,
-      subject: null,
-      tutors: null,
     });
 
-    //no signing in as admin must remain the current user of application
-    // // Automatically sign the user in
-    // await login(email, password);
+    return userCredential.user;
+  } catch (error) {
+    throw new Error(`Failed to create user: ${error.message}`);
+  }
+};
+
+export const createTutor = async (
+  email,
+  password,
+  status,
+  fullName,
+  meetingLink,
+  chatLink,
+  connectionsArray
+) => {
+  try {
+    const userCredential = await createUserWithEmailAndPassword(
+      FIREBASE_AUTH,
+      email,
+      password
+    );
+    const userId = userCredential.user.uid;
+
+    // Add the user data to Firestore
+    await setDoc(doc(FIREBASE_DB, "User", userId), {
+      email: email,
+      password: password,
+      availability: null,
+      fullname: fullName,
+      chatLink: chatLink,
+      meetingLink: meetingLink,
+      status: status,
+      connections: connectionsArray, // Store the connections array here
+    });
 
     return userCredential.user;
   } catch (error) {
@@ -99,8 +122,6 @@ export const signOut = async () => {
     throw new Error(error);
   }
 };
-
-
 
 //Function for fetching information on the current logged in user (Globalcontext)
 export const getCurrentUser = async () => {
@@ -134,7 +155,7 @@ export const getConnectedUsers = async (user) => {
   try {
     const connectionPromises = user.connections.map(async (connection) => {
       const [subject, userId] = connection.split(" ");
-      
+
       if (userId) {
         const userDoc = await getDoc(doc(FIREBASE_DB, "User", userId));
         if (userDoc.exists()) {
@@ -151,7 +172,7 @@ export const getConnectedUsers = async (user) => {
     console.error("Error fetching connected users: ", error);
   }
 
-  console.log("CONNECTED USERS: ", connectedUsers)
+  // console.log("CONNECTED USERS: ", connectedUsers)
   return connectedUsers.filter(Boolean);
 };
 
@@ -171,9 +192,52 @@ export const fetchRecipientInfo = async (userId) => {
   }
 };
 
+export const getAvailableTutors = async () => {
+  const subjectsWithTutors = [
+    { subject: "Mathematics", selected: false, tutors: [] },
+    { subject: "English", selected: false, tutors: [] },
+    { subject: "Science", selected: false, tutors: [] },
+    { subject: "Geography", selected: false, tutors: [] },
+  ];
 
+  try {
+    // Query to fetch all users with status 'tutor'
+    const tutorsQuery = query(
+      collection(FIREBASE_DB, "User"),
+      where("status", "==", "tutor")
+    );
 
+    const querySnapshot = await getDocs(tutorsQuery);
 
+    querySnapshot.forEach((doc) => {
+      const tutorData = doc.data();
+      const tutorId = doc.id;
+
+      // Get the available subjects for the tutor
+      const availableSubjects = (tutorData.connections || []).filter(
+        (connection) => !connection.includes(" ")
+      );
+
+      availableSubjects.forEach((subject) => {
+        const subjectIndex = subjectsWithTutors.findIndex(
+          (sub) => sub.subject === subject
+        );
+
+        if (subjectIndex !== -1) {
+          // Check if the tutor ID already exists in the tutors array
+          if (!subjectsWithTutors[subjectIndex].tutors.includes(tutorId)) {
+            subjectsWithTutors[subjectIndex].tutors.push(tutorId);
+          }
+        }
+      });
+    });
+
+    return subjectsWithTutors;
+  } catch (error) {
+    console.error("Error fetching available tutors: ", error);
+    throw new Error("Failed to fetch available tutors.");
+  }
+};
 
 
 
@@ -272,33 +336,27 @@ export const fetchMessages = (userId, recipientId, setMessages) => {
   };
 };
 
-
-
-
-
-
-
-
-export const submittingHomework = async (studId, tutorId, subject, description, dueDate) => {
+export const submittingHomework = async (
+  studId,
+  tutorId,
+  subject,
+  description,
+  dueDate
+) => {
   try {
-    const newHWRef = doc(
-      FIREBASE_DB,
-      "Homework",
-      generateMessageId()
-    ); // Generate a new message ID
+    const newHWRef = doc(FIREBASE_DB, "Homework", generateMessageId()); // Generate a new message ID
     await setDoc(newHWRef, {
       description: description,
       dueDate: dueDate,
       studentId: studId,
       subject: subject,
-      tutorId: tutorId
+      tutorId: tutorId,
     });
     // console.log("Homework submitted successfully!");
   } catch (error) {
     console.error("Error sending message: ", error);
   }
 };
-
 
 export const fetchHomework = (userId, userRole, setGroupedHomework) => {
   const homeworkRef = collection(FIREBASE_DB, "Homework");
@@ -315,7 +373,7 @@ export const fetchHomework = (userId, userRole, setGroupedHomework) => {
       const recipientInfo = await fetchRecipientInfo(oppositeId);
       return {
         id: doc.id,
-        recipientName: recipientInfo ? recipientInfo.fullname : 'Unknown',
+        recipientName: recipientInfo ? recipientInfo.fullname : "Unknown",
         ...data,
       };
     });
@@ -339,11 +397,10 @@ export const fetchHomework = (userId, userRole, setGroupedHomework) => {
   });
 };
 
-
 export const deleteHomework = async (itemId) => {
   try {
     // Get a reference to the specific document within the Homework collection
-    const homeworkDocRef = doc(FIREBASE_DB, 'Homework', itemId);
+    const homeworkDocRef = doc(FIREBASE_DB, "Homework", itemId);
     await deleteDoc(homeworkDocRef); // Delete the document using deleteDoc
     // console.log(`Homework with ID: ${itemId} deleted successfully.`);
     return true; // Optionally return true to indicate success
@@ -352,4 +409,3 @@ export const deleteHomework = async (itemId) => {
     return false; // Optionally return false to indicate failure
   }
 };
-
