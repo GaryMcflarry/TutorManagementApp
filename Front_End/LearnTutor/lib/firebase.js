@@ -155,8 +155,6 @@ export const getConnectedUsers = async (user) => {
   return connectedUsers.filter(Boolean);
 };
 
-
-
 export const fetchRecipientInfo = async (userId) => {
   try {
     // Fetch user document from Firestore
