@@ -100,6 +100,8 @@ export const signOut = async () => {
   }
 };
 
+
+
 //Function for fetching information on the current logged in user (Globalcontext)
 export const getCurrentUser = async () => {
   try {
@@ -124,43 +126,36 @@ export const getCurrentUser = async () => {
   }
 };
 
-//function for getting connected contacts for the current logged in user (Convo Page)
 export const getConnectedUsers = async (user) => {
-  if (!user) return [];
+  if (!user || !user.connections) return [];
 
   let connectedUsers = [];
 
   try {
-    // If the logged-in user is a student, fetch their tutors
-    if (user.status === "student") {
-      const tutorRefs = user.tutors || []; // Ensure `user.tutors` is an array
-      const tutorPromises = tutorRefs.map(async (tutorId) => {
-        const tutorDoc = await getDoc(doc(FIREBASE_DB, "User", tutorId)); // Fetch tutor document
-        if (tutorDoc.exists()) {
-          return { id: tutorDoc.id, ...tutorDoc.data() }; // Include the id in the returned data
-        }
-        return null;
-      });
-      connectedUsers = await Promise.all(tutorPromises);
+    const connectionPromises = user.connections.map(async (connection) => {
+      const [subject, userId] = connection.split(" ");
       
-      // If the logged-in user is a tutor, fetch their students
-    } else if (user.status === "tutor") {
-      const studentRefs = user.students || []; // Ensure `user.students` is an array
-      const studentPromises = studentRefs.map(async (studentId) => {
-        const studentDoc = await getDoc(doc(FIREBASE_DB, "User", studentId)); // Fetch student document
-        if (studentDoc.exists()) {
-          return { id: studentDoc.id, ...studentDoc.data() }; // Include the id in the returned data
+      if (userId) {
+        const userDoc = await getDoc(doc(FIREBASE_DB, "User", userId));
+        if (userDoc.exists()) {
+          return { id: userDoc.id, subject, ...userDoc.data() };
         }
-        return null;
-      });
-      connectedUsers = await Promise.all(studentPromises);
-    }
+      } else {
+        console.log(`No connection ID for subject: ${subject}`);
+      }
+      return null;
+    });
+
+    connectedUsers = await Promise.all(connectionPromises);
   } catch (error) {
     console.error("Error fetching connected users: ", error);
   }
-  // console.log("Connected Users: ", connectedUsers);
-  return connectedUsers.filter(Boolean); // Filter out null values
+
+  console.log("CONNECTED USERS: ", connectedUsers)
+  return connectedUsers.filter(Boolean);
 };
+
+
 
 export const fetchRecipientInfo = async (userId) => {
   try {

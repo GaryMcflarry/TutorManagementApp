@@ -9,23 +9,26 @@ import { getConnectedUsers } from "../../lib/firebase";
 import useFirebase from "../../lib/useFirebase";
 import { Dropdown } from "react-native-element-dropdown";
 
-// Utility function to convert subjects into { label, value } format
+// Utility function to convert subjects in `connections` into { label, value } format
 const getSubjectOptions = (user) => {
-  if (!user || !user.subject || user.subject.length === 0) return [];
-  return user.subject.map((subj) => ({
-    label: subj,
-    value: subj,
+  if (!user || !user.connections || user.connections.length === 0) return [];
+
+  // Extract unique subjects from connections
+  const subjects = [...new Set(user.connections.map((connection) => connection.split(" ")[0]))];
+  
+  // Return formatted options for the dropdown
+  return subjects.map((subject) => ({
+    label: subject,
+    value: subject,
   }));
 };
 
 const Home = ({ navigation }) => {
   const { user } = useGlobalContext();
-  const { data: tutorInfo, refetch } = useFirebase(() =>
-    getConnectedUsers(user)
-  );
+  const { data: userInfo, refetch } = useFirebase(() => getConnectedUsers(user));
 
   const [refreshing, setRefreshing] = useState(false);
-  const [subject, setSubject] = useState(user.subject[0] || '');
+  const [subject, setSubject] = useState(getSubjectOptions(user)[0]?.value || ""); // Default to first subject, if available
 
   // Get subject options using the utility function
   const subjectOptions = getSubjectOptions(user);
@@ -38,6 +41,9 @@ const Home = ({ navigation }) => {
 
   // Determine whether the user is a tutor
   const isTutor = user.status === "tutor";
+
+  // Log userInfo to the console to inspect the data before filtering
+  // console.log("userInfo:", userInfo);
 
   return (
     <SafeAreaView className="bg-white h-full w-full">
@@ -64,12 +70,10 @@ const Home = ({ navigation }) => {
             }
           />
         ) : (
-          // If user is not a tutor, show the list of tutors based on the selected subject
           <FlatList
-            data={tutorInfo.filter(
+            data={userInfo.filter(
               (tutor) =>
-                tutor.subject.includes(subject) &&
-                tutor.students.includes(user.uid)
+                tutor.subject === subject // Only include tutors for the selected subject
             )}
             renderItem={({ item }) => (
               <View>
