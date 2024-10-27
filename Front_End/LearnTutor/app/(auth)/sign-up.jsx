@@ -16,6 +16,7 @@ import {
   createTutor,
   createAdmin,
   getAvailableTutors,
+  createStudent,
 } from "../../lib/firebase";
 import useFirebase from "../../lib/useFirebase";
 import { useGlobalContext } from "../../context/GlobalProvider";
@@ -25,43 +26,93 @@ import { TouchableOpacity } from "react-native";
 import { CheckBox } from "@rneui/themed";
 
 const signUp = () => {
+  //Roles
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
+  const [fullName, setFullName] = useState("");
+  // Formvalid checking for signUp function - Roles
+  const isFormValid = (status) => {
+    if (status === "tutor") {
+      return (
+        isAnySubjectSelected() &&
+        email &&
+        password &&
+        fullName &&
+        meetingLink &&
+        chatLink
+      );
+    } else if (status === "student") {
+      return (
+        email && password && fullName && grade && address && tutors.length > 0
+      );
+    } else if (status === "admin") {
+      return email && password;
+    }
+    return false;
+  };
+
+  // Big boi function for creating users - Roles
+  const signUp = async () => {
+    if (!isFormValid(status)) {
+      Alert.alert("Error", "Please fill in all the fields");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      let connectionsArray = [];
+
+      if (status === "tutor") {
+        connectionsArray = subjects
+          .filter((subject) => subject.selected)
+          .flatMap((subject) => Array(subject.capacity).fill(subject.subject));
+
+        await createTutor(
+          email,
+          password,
+          status,
+          fullName,
+          meetingLink,
+          chatLink,
+          connectionsArray
+        );
+        Alert.alert("Tutor was created");
+      } else if (status === "student") {
+        connectionsArray = tutors
+          .map((tutor) => `${tutor.subject} ${tutor.tutorId}`)
+          .filter(Boolean); // Removes any falsy values
+
+        await createStudent(
+          email,
+          password,
+          status,
+          fullName,
+          grade,
+          address,
+          connectionsArray
+        );
+        Alert.alert("Student was created");
+      } else if (status === "admin") {
+        await createAdmin(email, password);
+        Alert.alert("Admin was created");
+      }
+
+      router.replace("/home");
+    } catch (error) {
+      Alert.alert("Error", `Failed to create ${status}: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ===========================================================================
+
+  //Tutor
   const [chatLink, setChatLink] = useState("");
   const [meetingLink, setMeetingLink] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [grade, setGrade] = useState("");
-  const [address, setAddress] = useState("");
-
-  const [loading, setLoading] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-
-  const [subjects, setSubjects] = useState([
-    { subject: "Mathematics", capacity: 1, selected: false },
-    { subject: "English", capacity: 1, selected: false },
-    { subject: "Science", capacity: 1, selected: false },
-    { subject: "Geography", capacity: 1, selected: false },
-  ]);
-
-  useEffect(() => {
-    const fetchTutors = async () => {
-      try {
-        const groupedTutors = await getAvailableTutors();
-        console.log("GroupedTutors: " ,groupedTutors);
-        setAvailableSubjects(groupedTutors);
-      } catch (error) {
-        console.error("Failed to load tutors:", error);
-      }
-    };
-  
-    fetchTutors();
-  }, []);
-  
-
-  const [availableSubjects, setAvailableSubjects] = useState([]);
-
-
+  //Updateing the selected subjects for availability - Tutors
   const toggleSubjectSelection = (index) => {
     setSubjects((prevSubjects) => {
       // Create a copy of the subjects array
@@ -81,6 +132,7 @@ const signUp = () => {
       return updatedSubjects;
     });
   };
+  // Updating capacity of chosen subjects - tutors
   const updateCapacity = (index, newCapacity) => {
     // Parse the new capacity as a number
     const parsedCapacity = parseInt(newCapacity, 10) || 1; // Default to 1 if parsing fails
@@ -91,74 +143,75 @@ const signUp = () => {
       )
     );
   };
-  // Function to check if any subject is selected
+  // Function to check if any subject is selected - Tutors
   const isAnySubjectSelected = () => {
     return subjects.some((subject) => subject.selected);
   };
 
+  // ===========================================================================
 
-
-  // Inside the signUp function
-  const signUp = async () => {
-    if (status === "tutor") {
-      if (
-        !isAnySubjectSelected() ||
-        email === "" ||
-        password === "" ||
-        fullName === "" ||
-        meetingLink === "" ||
-        chatLink === ""
-      ) {
-        Alert.alert("Error", "Please fill in all the fields");
-        return null;
-      } else {
-        setLoading(true);
-        try {
-          // Create connections array based on selected subjects and their capacities
-          const connectionsArray = subjects
-            .filter((subject) => subject.selected) // Filter selected subjects
-            .flatMap((subject) =>
-              Array(subject.capacity).fill(subject.subject)
-            ); // Repeat the subject name based on capacity
-
-          await createTutor(
-            email,
-            password,
-            status,
-            fullName,
-            meetingLink,
-            chatLink,
-            connectionsArray
-          ); // Pass connectionsArray to createTutor
-          Alert.alert("Tutor was created");
-          router.replace("/home");
-        } catch (error) {
-          Alert.alert("Error", `Failed to create tutor: ${error.message}`);
-        } finally {
-          setLoading(false);
-        }
+  //Student
+  const [grade, setGrade] = useState("");
+  const [address, setAddress] = useState("");
+  const [subjects, setSubjects] = useState([
+    { subject: "Mathematics", capacity: 1, selected: false },
+    { subject: "English", capacity: 1, selected: false },
+    { subject: "Science", capacity: 1, selected: false },
+    { subject: "Geography", capacity: 1, selected: false },
+  ]);
+  // Storing array for tutors - Student
+  const [tutors, setTutors] = useState([]);
+  //The state for storing availalbe tutors - Student
+  const [availableSubjects, setAvailableSubjects] = useState([]);
+  // Fetching the avialalble tutors Student
+  // Fetching the available tutors for Students
+  useEffect(() => {
+    const fetchTutors = async () => {
+      try {
+        const groupedTutors = await getAvailableTutors();
+        console.log("GroupedTutors: ", groupedTutors);
+        setAvailableSubjects(groupedTutors);
+      } catch (error) {
+        console.error("Failed to load tutors:", error);
       }
-    } else if (status === "student") {
-      // Implement logic for student sign-up here
-      Alert.alert("Info", "Student sign-up is not yet implemented.");
-    } else if (status === "admin") {
-      if (email === "" || password === "") {
-        Alert.alert("Error", "Please fill in all the fields");
-        return null;
-      } else {
-        setLoading(true);
-        try {
-          await createAdmin(email, password);
-          Alert.alert("Admin was created");
-          router.replace("/home");
-        } catch (error) {
-          Alert.alert("Error", `Failed to create admin: ${error.message}`);
-        } finally {
-          setLoading(false);
+    };
+
+    fetchTutors();
+  }, []);
+
+  // Checking how the select tutor function works - Student
+  useEffect(() => {
+    console.log("Selected Tutors: ", tutors);
+  }, [tutors]);
+
+  // Function to take available tutors and make options for them to choose - student
+  const createSubjectOptions = (availableSubjects) => {
+    return availableSubjects
+      .map((subjectObj) => {
+        if (subjectObj.tutorIds.length > 0) {
+          // If tutors are available for this subject, pair names with IDs
+          return subjectObj.tutorIds.map((tutorId, index) => ({
+            label: `${subjectObj.subject} - ${subjectObj.tutorNames[index]}`,
+            value: tutorId,
+          }));
+        } else {
+          // If no tutors are available for this subject, return a "no tutors" option
+          return [
+            {
+              label: `${subjectObj.subject} - No available tutors`,
+              value: "NoTutors",
+            },
+          ];
         }
-      }
-    }
+      })
+      .flat(); // Flatten to ensure a single array
   };
+
+  // ===========================================================================
+
+  //Functionality
+  const [loading, setLoading] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
   return (
     <SafeAreaView className="bg-primary h-full">
@@ -178,7 +231,18 @@ const signUp = () => {
             <View className="w-[300px] h-[30px] flex-row justify-end items-center">
               <TouchableOpacity
                 style={styles.shadow}
-                onPress={() => setModalVisible(!modalVisible)}
+                onPress={() => {
+                  setModalVisible(!modalVisible);
+                  setTutors([]); // Clear the tutors array
+
+                  // Reset the selected tutor IDs for each subject
+                  availableSubjects.forEach((subjectObj) => {
+                    subjectObj.selectedTutorId = null; // Reset selected tutor ID
+                  });
+
+                  // Trigger re-render
+                  setAvailableSubjects([...availableSubjects]); // Update state
+                }}
               >
                 <Text style={styles.textStyle} className="text-lg text-white">
                   X
@@ -255,33 +319,51 @@ const signUp = () => {
                 <View className="w-full p-3">
                   {availableSubjects.map((subjectObj, index) => (
                     <View key={index}>
-                      <View className="flex-row items-center justify-evenly w-[90%]">
-                        <CheckBox
-                          title={subjectObj.subject}
-                          checked={subjectObj.selected}
-                          onPress={() => toggleAvaialbleSubjects(index)}
-                          containerStyle={styles.checkboxContainer}
-                          checkedColor="#FEA07D"
-                          uncheckedColor="#FFFFFF"
-                          textStyle={{ color: "white" }}
+                      <View className="flex-row items-center justify-between w-[90%]">
+                        {/* Display the subject name directly */}
+                        <Text className="text-base text-white">
+                          {subjectObj.subject}
+                        </Text>
+
+                        {/* Dropdown component for selecting the tutor */}
+                        <Dropdown
+                          key={subjectObj.subject} // Unique key for each subject
+                          style={styles.dropdown}
+                          data={createSubjectOptions([subjectObj])}
+                          labelField="label"
+                          valueField="value"
+                          placeholder="Select Tutor"
+                          placeholderStyle={styles.placeholderStyle}
+                          selectedTextStyle={styles.selectedTextStyle}
+                          itemTextStyle={styles.itemTextStyle}
+                          iconStyle={styles.iconStyle}
+                          value={
+                            tutors.find((t) => t.subject === subjectObj.subject)
+                              ?.tutorId || "NoTutors"
+                          } // Track selected tutor ID
+                          onChange={(item) => {
+                            const subject = subjectObj.subject; // Get the subject name
+                            const tutorId = item.value; // Get the selected tutor ID
+
+                            // Update the tutors state, ensuring no duplicate entries for the same subject
+                            setTutors((prevTutors) => {
+                              const existingIndex = prevTutors.findIndex(
+                                (t) => t.subject === subject
+                              );
+                              if (existingIndex !== -1) {
+                                // Replace the existing tutor
+                                const updatedTutors = [...prevTutors];
+                                updatedTutors[existingIndex].tutorId = tutorId;
+                                return updatedTutors;
+                              }
+                              // Add new subject-tutor pair
+                              return [...prevTutors, { subject, tutorId }];
+                            });
+
+                            // Optionally, you could set the selected ID back to the subject object
+                            subjectObj.selectedTutorId = tutorId; // This line is optional as it might not re-render
+                          }}
                         />
-                        {subjectObj.selected && (
-                          <Dropdown
-                            style={styles.dropdown}
-                            data={subjectOptions}
-                            labelField="label"
-                            valueField="value"
-                            placeholder="Select Subject"
-                            placeholderStyle={styles.placeholderStyle}
-                            selectedTextStyle={styles.selectedTextStyle}
-                            itemTextStyle={styles.itemTextStyle}
-                            iconStyle={styles.iconStyle}
-                            value={subject}
-                            onChange={(item) => {
-                              setSubject(item.value);
-                            }}
-                          />
-                        )}
                       </View>
                     </View>
                   ))}
@@ -295,14 +377,7 @@ const signUp = () => {
                 {status === "tutor" && (
                   <TouchableOpacity
                     className={`bg-primary p-3 border-none rounded-xl mt-10 ${
-                      !isAnySubjectSelected() ||
-                      email === "" ||
-                      password === "" ||
-                      fullName === "" ||
-                      meetingLink === "" ||
-                      chatLink === ""
-                        ? "opacity-50"
-                        : ""
+                      !isFormValid(status) ? "opacity-50" : ""
                     }`}
                     style={styles.shadow}
                     onPress={() => {
@@ -315,13 +390,7 @@ const signUp = () => {
                 {status === "student" && (
                   <TouchableOpacity
                     className={`bg-primary p-3 border-none rounded-xl mt-10 ${
-                      email === "" ||
-                      password === "" ||
-                      fullName === "" ||
-                      grade === "" ||
-                      address === ""
-                        ? "opacity-50"
-                        : ""
+                      !isFormValid(status) ? "opacity-50" : ""
                     }`}
                     style={styles.shadow}
                     onPress={() => {

@@ -13,9 +13,15 @@ import { Dropdown } from "react-native-element-dropdown";
 const getSubjectOptions = (user) => {
   if (!user || !user.connections || user.connections.length === 0) return [];
 
-  // Extract unique subjects from connections
-  const subjects = [...new Set(user.connections.map((connection) => connection.split(" ")[0]))];
-  
+  // Extract unique subjects from connections that include an ID
+  const subjects = [
+    ...new Set(
+      user.connections
+        .filter((connection) => connection.split(" ")[1]) // Only keep connections with an ID
+        .map((connection) => connection.split(" ")[0]) // Extract the subject part
+    ),
+  ];
+
   // Return formatted options for the dropdown
   return subjects.map((subject) => ({
     label: subject,

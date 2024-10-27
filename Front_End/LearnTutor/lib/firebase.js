@@ -81,6 +81,7 @@ export const createTutor = async (
     );
     const userId = userCredential.user.uid;
 
+    console.log("Connections Array: ", connectionsArray);
     // Add the user data to Firestore
     await setDoc(doc(FIREBASE_DB, "User", userId), {
       email: email,
@@ -98,6 +99,101 @@ export const createTutor = async (
     throw new Error(`Failed to create user: ${error.message}`);
   }
 };
+
+export const createStudent = async (
+  email,
+  password,
+  status,
+  fullName,
+  grade,
+  address,
+  connectionsArray
+) => {
+  try {
+    const userCredential = await createUserWithEmailAndPassword(
+      FIREBASE_AUTH,
+      email,
+      password
+    );
+    const userId = userCredential.user.uid;
+
+    // Filter out connections with a null tutor ID
+    const filteredConnections = connectionsArray
+      .map((conn) => {
+        const [subject, tutorId] = conn.split(" "); // Split subject and tutorId
+        return tutorId && tutorId !== "NoTutors" ? conn : subject; // If tutorId is null or "No Tutors", return only the subject
+      })
+      .filter((conn) => conn); // Remove any empty entries
+
+    console.log("Filtered Connections Array: ", filteredConnections);
+
+    // Add the user data to Firestore
+    await setDoc(doc(FIREBASE_DB, "User", userId), {
+      email: email,
+      password: password,
+      fullname: fullName,
+      status: status,
+      grade: grade,
+      address: address,
+      connections: filteredConnections, // Store the filtered connections array here
+    });
+
+    // Update the tutor's connections with the new student ID
+    await updateTutorsConnections(filteredConnections, userId);
+
+    return userCredential.user;
+  } catch (error) {
+    throw new Error(`Failed to create user: ${error.message}`);
+  }
+};
+
+const updateTutorsConnections = async (connectionsArray, studentId) => {
+  try {
+    for (const connection of connectionsArray) {
+      const [subject, tutorId] = connection.split(" "); // Split subject and tutorId
+
+      // If tutorId exists, update their connections
+      if (tutorId) {
+        const tutorDocRef = doc(FIREBASE_DB, "User", tutorId);
+
+        // Get the current tutor's data
+        const tutorSnap = await getDoc(tutorDocRef);
+        if (tutorSnap.exists()) {
+          const tutorData = tutorSnap.data();
+          const existingConnections = tutorData.connections || [];
+
+          // Create a new connection with the student ID
+          const newConnection = `${subject} ${studentId}`;
+
+          // Find an existing non-connected entry for this subject
+          const existingSubjectIndex = existingConnections.findIndex((conn) => 
+            conn.startsWith(subject) && conn.split(" ").length === 1
+          );
+
+          if (existingSubjectIndex !== -1) {
+            // Replace the non-connected entry with the new connection
+            existingConnections[existingSubjectIndex] = newConnection;
+          } else {
+            // If there's no non-connected entry for that subject, add the new one
+            existingConnections.push(newConnection);
+          }
+
+          // Update tutor's document in Firestore
+          await setDoc(
+            tutorDocRef,
+            {
+              connections: existingConnections,
+            },
+            { merge: true }
+          ); // Use merge to avoid overwriting other fields
+        }
+      }
+    }
+  } catch (error) {
+    console.error(`Failed to update tutor's connections: ${error.message}`);
+  }
+};
+
 
 // Function to sign in a user (Sign-in Page)
 export const login = async (email, password) => {
@@ -194,10 +290,10 @@ export const fetchRecipientInfo = async (userId) => {
 
 export const getAvailableTutors = async () => {
   const subjectsWithTutors = [
-    { subject: "Mathematics", selected: false, tutors: [] },
-    { subject: "English", selected: false, tutors: [] },
-    { subject: "Science", selected: false, tutors: [] },
-    { subject: "Geography", selected: false, tutors: [] },
+    { subject: "Mathematics", selected: false, tutorIds: [], tutorNames: [] },
+    { subject: "English", selected: false, tutorIds: [], tutorNames: [] },
+    { subject: "Science", selected: false, tutorIds: [], tutorNames: [] },
+    { subject: "Geography", selected: false, tutorIds: [], tutorNames: [] },
   ];
 
   try {
@@ -225,8 +321,11 @@ export const getAvailableTutors = async () => {
 
         if (subjectIndex !== -1) {
           // Check if the tutor ID already exists in the tutors array
-          if (!subjectsWithTutors[subjectIndex].tutors.includes(tutorId)) {
-            subjectsWithTutors[subjectIndex].tutors.push(tutorId);
+          if (!subjectsWithTutors[subjectIndex].tutorIds.includes(tutorId)) {
+            subjectsWithTutors[subjectIndex].tutorIds.push(tutorId);
+            subjectsWithTutors[subjectIndex].tutorNames.push(
+              tutorData.fullname || ""
+            ); // Adding tutor name
           }
         }
       });
@@ -238,8 +337,6 @@ export const getAvailableTutors = async () => {
     throw new Error("Failed to fetch available tutors.");
   }
 };
-
-
 
 export const sendMessage = async (fromId, toId, messageContent) => {
   try {
