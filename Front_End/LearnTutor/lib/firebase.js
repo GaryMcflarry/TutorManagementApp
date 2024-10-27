@@ -194,7 +194,6 @@ const updateTutorsConnections = async (connectionsArray, studentId) => {
   }
 };
 
-
 // Function to sign in a user (Sign-in Page)
 export const login = async (email, password) => {
   try {

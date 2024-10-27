@@ -4,6 +4,7 @@ import {
   View,
   ScrollView,
   TextInput,
+  Image,
   Alert,
   Modal,
 } from "react-native";
@@ -18,12 +19,14 @@ import {
   getAvailableTutors,
   createStudent,
 } from "../../lib/firebase";
-import useFirebase from "../../lib/useFirebase";
-import { useGlobalContext } from "../../context/GlobalProvider";
 import FormField from "../components/FormField";
 import { Dropdown } from "react-native-element-dropdown";
 import { TouchableOpacity } from "react-native";
 import { CheckBox } from "@rneui/themed";
+import { icons } from "../../constants";
+import { useNavigation } from "@react-navigation/native";
+
+
 
 const signUp = () => {
   //Roles
@@ -213,6 +216,8 @@ const signUp = () => {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
 
+  const navigation = useNavigation();
+
   return (
     <SafeAreaView className="bg-primary h-full">
       <Modal
@@ -285,7 +290,7 @@ const signUp = () => {
                         {subjectObj.selected && (
                           <TextInput
                             style={styles.capacityInput}
-                            placeholder="Capacity"
+                            placeholder="Students"
                             keyboardType="number-pad"
                             onChangeText={(text) => updateCapacity(index, text)}
                           />
@@ -407,8 +412,15 @@ const signUp = () => {
       </Modal>
       <ScrollView contentContainerStyle={{ height: "100%" }}>
         <KeyboardAvoidingView behavior="padding">
-          <View className="w-full my-10 justify-center items-center">
-            <Text className="text-7xl font-pregular text-white mt-7 text-center">
+          <View className="w-full my-10 flex-row items-center p-3">
+          <TouchableOpacity
+              onPress={() => {
+                navigation.goBack();
+              }}
+            >
+              <Image source={icons.leftArrow} />
+            </TouchableOpacity>
+            <Text className="text-7xl font-pregular text-white mt-7 text-center flex-1">
               learn.
             </Text>
           </View>
