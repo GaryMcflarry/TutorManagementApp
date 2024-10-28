@@ -337,20 +337,134 @@ export const listenToUsers = (setUsers) => {
   );
 
   // Set up a listener for changes in the users collection
-  const unsubscribe = onSnapshot(usersQuery, (querySnapshot) => {
-    // Map over the query results and return each user's data along with their UID
-    const users = querySnapshot.docs.map((doc) => ({
-      uid: doc.id, // UID of each user
-      ...doc.data(), // User data
-    }));
+  const unsubscribe = onSnapshot(
+    usersQuery,
+    (querySnapshot) => {
+      // Map over the query results and return each user's data along with their UID
+      const users = querySnapshot.docs.map((doc) => ({
+        uid: doc.id, // UID of each user
+        ...doc.data(), // User data
+      }));
 
-    setUsers(users); // Update the state with the new users list
-  }, (error) => {
-    console.error("Error fetching users:", error);
-  });
+      setUsers(users); // Update the state with the new users list
+    },
+    (error) => {
+      console.error("Error fetching users:", error);
+    }
+  );
 
   // Return the unsubscribe function to stop listening when needed
   return unsubscribe;
+};
+
+export const updateUser = async (user, subjects, setEditedUser, fullname, chatLink, meetingLink) => {
+
+  try {
+    // Ensure the user is a tutor before proceeding
+    if (user.status !== "tutor") {
+      console.log("User is not a tutor, skipping updates.");
+      return false; // Return false if user is not a tutor
+    }
+
+    // Create a copy of the user's connections to update
+    const updatedConnections = [...user.connections];
+
+    // Process each subject to manage non-connected additions or deletions
+    subjects.forEach((subjectObj) => {
+      const { subject, capacity, selected } = subjectObj;
+
+      // Filter current connections for the specific subject
+      const subjectConnections = updatedConnections.filter((conn) => {
+        const [connSubject] = conn.includes(" ") ? conn.split(" ") : [conn];
+        return connSubject === subject;
+      });
+
+      const connectedCount = subjectConnections.filter((conn) =>
+        conn.includes(" ")
+      ).length; // Connections with IDs
+      const totalConnections = subjectConnections.length;
+
+      // Adding non-connected subjects if selected and under capacity
+      if (selected && capacity > connectedCount) {
+        const toAdd = capacity - totalConnections; // Only add up to reach capacity
+
+        for (let i = 0; i < toAdd; i++) {
+          updatedConnections.push(subject); // Add non-connected subject entries only
+        }
+      }
+
+      // Deleting only non-connected subjects if capacity is lower than current non-connected count
+      if (selected && capacity < totalConnections) {
+        const toRemove = totalConnections - capacity;
+        let removedCount = 0;
+
+        for (let i = updatedConnections.length - 1; i >= 0; i--) {
+          const [connSubject, studentId] = updatedConnections[i].includes(" ")
+            ? updatedConnections[i].split(" ")
+            : [updatedConnections[i], null];
+
+          // Only remove if it's a non-connected entry for the current subject
+          if (
+            connSubject === subject &&
+            !studentId &&
+            removedCount < toRemove
+          ) {
+            updatedConnections.splice(i, 1);
+            removedCount++;
+          }
+        }
+
+        // Alert if there's an attempt to go below connected capacity
+        if (toRemove > removedCount) {
+          alert(
+            `Unable to reduce capacity further for ${subject} due to existing student connections. Remove connected students first.`
+          );
+        }
+      }
+
+      // Deselecting subjects (when unchecking)
+      if (!selected) {
+        const hasActiveConnections = updatedConnections.some((connection) => {
+          const [connSubject] = connection.split(" ");
+          return connSubject === subject; // Check if the connection subject matches
+        });
+
+        if (hasActiveConnections) {
+          alert("Student(s) currently connected. Remove connections first.");
+          return; // Prevent deselecting
+        }
+
+        // If no active connections, remove all occurrences of the subject from connections
+        for (let i = updatedConnections.length - 1; i >= 0; i--) {
+          const [connSubject] = updatedConnections[i].split(" ");
+          if (connSubject === subject) {
+            updatedConnections.splice(i, 1); // Remove all occurrences
+          }
+        }
+      }
+    });
+
+    // Update the editedUser connections state
+    setEditedUser((prevUser) => ({
+      ...prevUser,
+      connections: updatedConnections,
+    }));
+
+    // Update the user record in Firebase, including additional fields
+    const userRef = doc(FIREBASE_DB, "User", user.uid); // Correctly reference the document
+    await updateDoc(userRef, { // Use updateDoc for updating
+      connections: updatedConnections,
+      fullname: fullname, // Update fullname
+      chatLink: chatLink, // Update chat link
+      meetingLink: meetingLink, // Update meeting link
+    });
+
+    console.log("User updated successfully in Firebase");
+    return true; // Return true if successful
+  } catch (error) {
+    console.error("Error updating user:", error);
+    return false; // Return false if there was an error
+  }
 };
 
 const functions = getFunctions(FIREBASE_APP);
