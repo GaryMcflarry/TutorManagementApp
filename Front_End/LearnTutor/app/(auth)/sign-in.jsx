@@ -41,11 +41,21 @@ const signIn = () => {
       await login(email, password);
 
       const result = await getCurrentUser();
+      // console.log(result.status);
       setUser(result); //lowkey my token method
       setIsLoggedIn(true);
 
       Alert.alert('Login Success');
-      router.replace("/home");
+
+
+      console.log("Redirecting based on status:", result.status);
+
+
+      if (result.status === "admin") {
+        router.replace("/admin");
+      } else {
+        router.replace("/home");
+      }
 
       // console.log(response);
     } catch (error) {

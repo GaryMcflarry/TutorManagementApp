@@ -41,7 +41,7 @@ const FIREBASE_AUTH = initializeAuth(FIREBASE_APP, {
 });
 const FIREBASE_DB = getFirestore(FIREBASE_APP);
 
-// Function to create a new user
+// Functions to create a new users
 export const createAdmin = async (email, password) => {
   try {
     // Create a new user with Firebase Authentication
@@ -63,7 +63,6 @@ export const createAdmin = async (email, password) => {
     throw new Error(`Failed to create user: ${error.message}`);
   }
 };
-
 export const createTutor = async (
   email,
   password,
@@ -99,7 +98,6 @@ export const createTutor = async (
     throw new Error(`Failed to create user: ${error.message}`);
   }
 };
-
 export const createStudent = async (
   email,
   password,
@@ -147,6 +145,7 @@ export const createStudent = async (
   }
 };
 
+// Functions to update user Information
 const updateTutorsConnections = async (connectionsArray, studentId) => {
   try {
     for (const connection of connectionsArray) {
@@ -194,6 +193,7 @@ const updateTutorsConnections = async (connectionsArray, studentId) => {
   }
 };
 
+
 // Function to sign in a user (Sign-in Page)
 export const login = async (email, password) => {
   try {
@@ -208,7 +208,6 @@ export const login = async (email, password) => {
     throw new Error(`Failed to sign in: ${error.message}`);
   }
 };
-
 //Function for signing out of the application
 export const signOut = async () => {
   try {
@@ -218,7 +217,7 @@ export const signOut = async () => {
   }
 };
 
-//Function for fetching information on the current logged in user (Globalcontext)
+//Functions for fetching information on users
 export const getCurrentUser = async () => {
   try {
     const currentUser = FIREBASE_AUTH.currentUser;
@@ -241,7 +240,6 @@ export const getCurrentUser = async () => {
     return null; // Return null in case of an error
   }
 };
-
 export const getConnectedUsers = async (user) => {
   if (!user || !user.connections) return [];
 
@@ -270,7 +268,6 @@ export const getConnectedUsers = async (user) => {
   // console.log("CONNECTED USERS: ", connectedUsers)
   return connectedUsers.filter(Boolean);
 };
-
 export const fetchRecipientInfo = async (userId) => {
   try {
     // Fetch user document from Firestore
@@ -286,7 +283,6 @@ export const fetchRecipientInfo = async (userId) => {
     console.error("Error fetching recipient info: ", error);
   }
 };
-
 export const getAvailableTutors = async () => {
   const subjectsWithTutors = [
     { subject: "Mathematics", selected: false, tutorIds: [], tutorNames: [] },
@@ -337,6 +333,33 @@ export const getAvailableTutors = async () => {
   }
 };
 
+
+export const getAllUsers = async () => {
+  try {
+    // Define a query to get all users ordered by the 'status' field
+    const usersQuery = query(
+      collection(FIREBASE_DB, "User"),
+      orderBy("status") // Order by 'status' field
+    );
+
+    // Execute the query
+    const querySnapshot = await getDocs(usersQuery);
+
+    // Map over the query results and return each user's data along with their UID
+    const users = querySnapshot.docs.map((doc) => ({
+      uid: doc.id, // UID of each user
+      ...doc.data(), // User data
+    }));
+
+    return users; // Return the ordered list of users
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return []; // Return an empty array in case of an error
+  }
+};
+
+
+//Functions for dealing with messaging (Conversation / [query] page)
 export const sendMessage = async (fromId, toId, messageContent) => {
   try {
     const newMessageRef = doc(
@@ -359,7 +382,6 @@ export const sendMessage = async (fromId, toId, messageContent) => {
 const generateMessageId = () => {
   return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
-
 export const fetchMessages = (userId, recipientId, setMessages) => {
   const messagesRef = collection(FIREBASE_DB, "Conversations");
 
@@ -432,6 +454,9 @@ export const fetchMessages = (userId, recipientId, setMessages) => {
   };
 };
 
+
+
+//Functions for dealing with homework (Homework page)
 export const submittingHomework = async (
   studId,
   tutorId,
@@ -453,7 +478,6 @@ export const submittingHomework = async (
     console.error("Error sending message: ", error);
   }
 };
-
 export const fetchHomework = (userId, userRole, setGroupedHomework) => {
   const homeworkRef = collection(FIREBASE_DB, "Homework");
   const homeworkForId = query(
@@ -492,7 +516,6 @@ export const fetchHomework = (userId, userRole, setGroupedHomework) => {
     setGroupedHomework(groupedHomework);
   });
 };
-
 export const deleteHomework = async (itemId) => {
   try {
     // Get a reference to the specific document within the Homework collection
