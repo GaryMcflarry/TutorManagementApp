@@ -12,31 +12,27 @@ import CustomButton from "../components/CustomButton";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import React, { useEffect, useState } from "react";
-import { getAllUsers } from "../../lib/firebase";
+import { getAllUsers, deleteUser } from "../../lib/firebase";
 
 const Admin = () => {
-  const [users, setUsers] = useState([]); // Change to a single users state
-
+  const [users, setUsers] = useState([]);
   const [editMode, setEditMode] = useState(false);
-const [currentData, setCurrentData] = useState(null); // For holding data when editing
+  const [currentData, setCurrentData] = useState(null);
 
-
-const handleEdit = (data) => {
-  setCurrentData(data); // Set the current data to the data being edited
-  setFullName(data.fullName);
-  setGrade(data.grade); // for student
-  setAddress(data.address); // for student
-  setModalVisible(true); // Show the modal
-  setEditMode(true); // Set to edit mode
-};
-
+  const handleEdit = (data) => {
+    setCurrentData(data);
+    // Assuming you have the state variables for these fields
+    setFullName(data.fullName);
+    setGrade(data.grade);
+    setAddress(data.address);
+    setModalVisible(true);
+    setEditMode(true);
+  };
 
   useEffect(() => {
     const fetchUsers = async () => {
-      const users = await getAllUsers(); // Fetch all users
-      setUsers(users); // Store all users
-
-      // You can maintain filtered states if needed
+      const users = await getAllUsers();
+      setUsers(users);
     };
 
     fetchUsers();
@@ -57,8 +53,10 @@ const handleEdit = (data) => {
       style={styles.tableRow}
       onPress={() => {
         console.log("User ID:", item.uid);
-        fields.forEach(field => {
-          console.log(`${field.charAt(0).toUpperCase() + field.slice(1)}: ${item[field]}`);
+        fields.forEach((field) => {
+          console.log(
+            `${field.charAt(0).toUpperCase() + field.slice(1)}: ${item[field]}`
+          );
         });
 
         // Show alert with options
@@ -69,22 +67,50 @@ const handleEdit = (data) => {
             {
               text: "Cancel",
               onPress: () => console.log("Cancel option selected"),
-              style: "cancel", // Optionally style the cancel button
+              style: "cancel",
             },
             {
               text: "Edit",
               onPress: () => {
-                // Log all user info when "Edit" is selected
                 console.log("Edit option selected for User ID:", item.uid);
-                console.log("Full User Information (pre-filter):", item); // Log the entire user object
+                console.log("Full User Information (pre-filter):", item);
               },
             },
             {
               text: "Delete",
               onPress: () => {
-                // Log all user info when "Delete" is selected
-                console.log("Delete option selected for User ID:", item.uid);
-                console.log("Full User Information (pre-filter):", item); // Log the entire user object
+                console.log(
+                  "Delete option selected for User ID:",
+                  item.uid
+                );
+                console.log("Full User Information (pre-filter):", item);
+
+                Alert.alert(
+                  "Are you sure?",
+                  "",
+                  [
+                    {
+                      text: "Yes",
+                      onPress: async () => {
+                        const success = await deleteUser(item.uid);
+                        if (success) {
+                          console.log("User deleted successfully");
+                          // Optionally, you can refetch the users after deletion
+                          const updatedUsers = await getAllUsers();
+                          setUsers(updatedUsers);
+                        } else {
+                          console.log("User deletion failed or was not necessary");
+                        }
+                      },
+                    },
+                    {
+                      text: "No",
+                      onPress: () => console.log("No selected"),
+                      style: "cancel",
+                    },
+                  ],
+                  { cancelable: true }
+                );
               },
             },
           ],
@@ -100,7 +126,6 @@ const handleEdit = (data) => {
     </TouchableOpacity>
   );
 
-  // Separate data arrays (optional)
   const admins = users.filter((user) => user.status === "admin");
   const tutors = users.filter((user) => user.status === "tutor");
   const students = users.filter((user) => user.status === "student");

@@ -20,6 +20,7 @@ import {
   orderBy,
   serverTimestamp,
   deleteDoc,
+  updateDoc,
 } from "firebase/firestore";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -165,8 +166,8 @@ const updateTutorsConnections = async (connectionsArray, studentId) => {
           const newConnection = `${subject} ${studentId}`;
 
           // Find an existing non-connected entry for this subject
-          const existingSubjectIndex = existingConnections.findIndex((conn) => 
-            conn.startsWith(subject) && conn.split(" ").length === 1
+          const existingSubjectIndex = existingConnections.findIndex(
+            (conn) => conn.startsWith(subject) && conn.split(" ").length === 1
           );
 
           if (existingSubjectIndex !== -1) {
@@ -192,7 +193,6 @@ const updateTutorsConnections = async (connectionsArray, studentId) => {
     console.error(`Failed to update tutor's connections: ${error.message}`);
   }
 };
-
 
 // Function to sign in a user (Sign-in Page)
 export const login = async (email, password) => {
@@ -332,8 +332,6 @@ export const getAvailableTutors = async () => {
     throw new Error("Failed to fetch available tutors.");
   }
 };
-
-
 export const getAllUsers = async () => {
   try {
     // Define a query to get all users ordered by the 'status' field
@@ -358,6 +356,69 @@ export const getAllUsers = async () => {
   }
 };
 
+export const deleteUser = async (userId) => {
+  try {
+    const auth = getAuth(); // Initialize Firebase Auth
+    const usersQuery = query(collection(FIREBASE_DB, "User"));
+    const querySnapshot = await getDocs(usersQuery);
+    
+    // Store user updates to handle connections
+    const userUpdates = [];
+    let userToDelete; // Variable to hold the user document to delete
+
+    for (const doc of querySnapshot.docs) {
+      const userData = doc.data();
+      const uid = doc.id;
+
+      // Check if the user ID matches
+      if (uid === userId) {
+        userToDelete = doc.ref; // Store the reference of the user to delete
+        console.log(`User found for deletion: ${uid}`);
+      } else if (userData.connections) {
+        const updatedConnections = userData.connections
+          .filter(connection => {
+            // Check if the connection string contains a space
+            if (connection.includes(' ')) {
+              const [subject, connectionUserId] = connection.split(' ');
+              // If the connection user ID matches the userId to be deleted, return only the subject
+              return connectionUserId !== userId; // Keep connections that do not include the userId
+            }
+            return true; // Return the connection unchanged if it doesn't contain a space
+          });
+
+        // Update the user's connections if necessary
+        if (updatedConnections.length !== userData.connections.length) {
+          userUpdates.push({ uid, updatedConnections });
+        }
+      }
+    }
+
+    // Perform batch updates for users with updated connections
+    for (const { uid, updatedConnections } of userUpdates) {
+      await updateDoc(doc(FIREBASE_DB, "User", uid), {
+        connections: updatedConnections,
+      });
+      console.log(`Updated connections for user ID: ${uid}`);
+    }
+
+    // If a user was found for deletion, delete from Firestore and Authentication
+    if (userToDelete) {
+      // Delete from Firebase Authentication
+      await auth.deleteUser(userId); // Directly call deleteUser with userId
+      console.log(`Deleted user from authentication: ${userId}`);
+      
+      // Delete from Firestore
+      await deleteDoc(userToDelete);
+      console.log(`Deleted user with ID: ${userId}`);
+      return true; // User deleted successfully
+    }
+
+    return false; // User was not deleted but connections updated
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    return false; // Return false on error
+  }
+};
 
 //Functions for dealing with messaging (Conversation / [query] page)
 export const sendMessage = async (fromId, toId, messageContent) => {
@@ -453,8 +514,6 @@ export const fetchMessages = (userId, recipientId, setMessages) => {
     unsubscribeFromRecipientToUser(); // Stop listening to messages from recipient to user
   };
 };
-
-
 
 //Functions for dealing with homework (Homework page)
 export const submittingHomework = async (
