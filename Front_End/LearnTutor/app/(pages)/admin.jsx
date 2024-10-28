@@ -10,9 +10,9 @@ const Admin = ({ navigation }) => {
   return (
     <SafeAreaView>
       <StatusBarWrapper title="Admin">
-        <View className="w-full h-[70px] items-end p-3">
+        {/* <View className="w-full h-[70px] items-end p-3">
           <MenuButton handlePress={() => navigation.toggleDrawer()} />
-        </View>
+        </View> */}
         <View>
           <CustomButton
             title="+"
