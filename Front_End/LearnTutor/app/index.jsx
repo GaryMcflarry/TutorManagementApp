@@ -31,7 +31,7 @@ export default function App() {
         </View>
         <View className="w-full mt-10 mb-20 justify-center items-center">
           <Text className="text-lg font-pregular font-bold text-white text-center">
-            Managment Application for Student and Tutor needs.
+            Management for Students and Tutors alike.
           </Text>
         </View>
         <View className="w-full justify-center items-center">
