@@ -1,7 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import {
-  getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   getReactNativePersistence,
@@ -23,7 +22,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
-
+import { getFunctions, httpsCallable } from "firebase/functions";
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyC2eF1Y6891qgShiJmeA9mhIrj9s4pIRAs",
@@ -145,7 +144,6 @@ export const createStudent = async (
     throw new Error(`Failed to create user: ${error.message}`);
   }
 };
-
 // Functions to update user Information
 const updateTutorsConnections = async (connectionsArray, studentId) => {
   try {
@@ -193,7 +191,6 @@ const updateTutorsConnections = async (connectionsArray, studentId) => {
     console.error(`Failed to update tutor's connections: ${error.message}`);
   }
 };
-
 // Function to sign in a user (Sign-in Page)
 export const login = async (email, password) => {
   try {
@@ -332,91 +329,114 @@ export const getAvailableTutors = async () => {
     throw new Error("Failed to fetch available tutors.");
   }
 };
-export const getAllUsers = async () => {
-  try {
-    // Define a query to get all users ordered by the 'status' field
-    const usersQuery = query(
-      collection(FIREBASE_DB, "User"),
-      orderBy("status") // Order by 'status' field
-    );
+export const listenToUsers = (setUsers) => {
+  // Define a query to get all users ordered by the 'status' field
+  const usersQuery = query(
+    collection(FIREBASE_DB, "User"),
+    orderBy("status") // Order by 'status' field
+  );
 
-    // Execute the query
-    const querySnapshot = await getDocs(usersQuery);
-
+  // Set up a listener for changes in the users collection
+  const unsubscribe = onSnapshot(usersQuery, (querySnapshot) => {
     // Map over the query results and return each user's data along with their UID
     const users = querySnapshot.docs.map((doc) => ({
       uid: doc.id, // UID of each user
       ...doc.data(), // User data
     }));
 
-    return users; // Return the ordered list of users
-  } catch (error) {
+    setUsers(users); // Update the state with the new users list
+  }, (error) => {
     console.error("Error fetching users:", error);
-    return []; // Return an empty array in case of an error
-  }
+  });
+
+  // Return the unsubscribe function to stop listening when needed
+  return unsubscribe;
 };
 
+const functions = getFunctions(FIREBASE_APP);
+
 export const deleteUser = async (userId) => {
+  const functions = getFunctions();
+  const deleteUserFunc = httpsCallable(functions, "deleteUser");
+
   try {
-    const auth = getAuth(); // Initialize Firebase Auth
-    const usersQuery = query(collection(FIREBASE_DB, "User"));
-    const querySnapshot = await getDocs(usersQuery);
-    
-    // Store user updates to handle connections
-    const userUpdates = [];
-    let userToDelete; // Variable to hold the user document to delete
+    // Validate userId
+    if (typeof userId !== "string" || userId.trim() === "") {
+      throw new Error("Invalid user ID");
+    }
 
-    for (const doc of querySnapshot.docs) {
-      const userData = doc.data();
-      const uid = doc.id;
+    const result = await deleteUserFunc({ userId });
+    if (result.data.success) {
+      // console.log(
+      //   `User with ID: ${userId} deleted successfully from authentication.`
+      // );
 
-      // Check if the user ID matches
-      if (uid === userId) {
-        userToDelete = doc.ref; // Store the reference of the user to delete
-        console.log(`User found for deletion: ${uid}`);
-      } else if (userData.connections) {
-        const updatedConnections = userData.connections
-          .filter(connection => {
-            // Check if the connection string contains a space
-            if (connection.includes(' ')) {
-              const [subject, connectionUserId] = connection.split(' ');
-              // If the connection user ID matches the userId to be deleted, return only the subject
-              return connectionUserId !== userId; // Keep connections that do not include the userId
+      // Delete the user document from Firestore
+      const userDocRef = doc(FIREBASE_DB, "User", userId);
+      await deleteDoc(userDocRef); // Delete the user document
+
+      // Update other users’ connections if necessary
+      const usersQuery = query(
+        collection(FIREBASE_DB, "User"),
+        orderBy("status")
+      );
+
+      // Execute the query
+      const querySnapshot = await getDocs(usersQuery);
+      //console.log("QuerySnapshot: ", querySnapshot);
+
+      // Loop through each user to update their connections
+      const updatePromises = querySnapshot.docs.map(async (docSnapshot) => {
+        //console.log("USER DATA: ", docSnapshot.data());
+        //console.log("USER ID: ", docSnapshot.id);
+        const userData = docSnapshot.data();
+        const userDocRef = doc(FIREBASE_DB, "User", docSnapshot.id); // Reference for updating each user
+        //console.log("User Document Reference: ", userDocRef.path);
+
+        if (userData.connections && Array.isArray(userData.connections)) {
+          // Update connections for each user
+          const updatedConnections = userData.connections.map((connection) => {
+            // Check if the connection string contains a space before splitting
+            if (connection.includes(" ")) {
+              const [subject, connectionUserId] = connection.split(" ");
+              //console.log("Subject: ", subject);
+              //console.log("Connection User ID: ", connectionUserId);
+
+              // Replace connectionUserId with just the subject if it matches userId
+              return connectionUserId === userId ? subject : connection;
             }
-            return true; // Return the connection unchanged if it doesn't contain a space
+            // Return unchanged if no space
+            return connection;
           });
 
-        // Update the user's connections if necessary
-        if (updatedConnections.length !== userData.connections.length) {
-          userUpdates.push({ uid, updatedConnections });
+          // Check if any connections were updated
+          const connectionsChanged = updatedConnections.some(
+            (conn, index) => conn !== userData.connections[index]
+          );
+
+          // If there are any changes to the connections, update the user document
+          if (connectionsChanged) {
+            // console.log(
+            //   `Updating connections for user ID: ${userId} with data:`,
+            //   updatedConnections
+            // );
+            await updateDoc(userDocRef, { connections: updatedConnections });
+            //console.log(`Updated connections for user ID: ${userId}`);
+          } else {
+            //console.log(`No changes to connections for user ID: ${userId}`);
+          }
+        } else {
+          //console.log(`No connections found for user ID: ${userId}`);
         }
-      }
-    }
-
-    // Perform batch updates for users with updated connections
-    for (const { uid, updatedConnections } of userUpdates) {
-      await updateDoc(doc(FIREBASE_DB, "User", uid), {
-        connections: updatedConnections,
       });
-      console.log(`Updated connections for user ID: ${uid}`);
-    }
 
-    // If a user was found for deletion, delete from Firestore and Authentication
-    if (userToDelete) {
-      // Delete from Firebase Authentication
-      await auth.deleteUser(userId); // Directly call deleteUser with userId
-      console.log(`Deleted user from authentication: ${userId}`);
-      
-      // Delete from Firestore
-      await deleteDoc(userToDelete);
-      console.log(`Deleted user with ID: ${userId}`);
-      return true; // User deleted successfully
+      // Await all updates to complete
+      await Promise.all(updatePromises);
+    } else {
+      console.error("Failed to delete user:", result.data.error);
     }
-
-    return false; // User was not deleted but connections updated
   } catch (error) {
-    console.error('Error deleting user:', error);
-    return false; // Return false on error
+    console.error("Error calling deleteUser function:", error.message);
   }
 };
 

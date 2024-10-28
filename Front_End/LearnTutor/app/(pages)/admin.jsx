@@ -12,31 +12,32 @@ import CustomButton from "../components/CustomButton";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import React, { useEffect, useState } from "react";
-import { getAllUsers, deleteUser } from "../../lib/firebase";
+import { listenToUsers, deleteUser } from "../../lib/firebase";
 
 const Admin = () => {
   const [users, setUsers] = useState([]);
   const [editMode, setEditMode] = useState(false);
   const [currentData, setCurrentData] = useState(null);
 
-  const handleEdit = (data) => {
-    setCurrentData(data);
-    // Assuming you have the state variables for these fields
-    setFullName(data.fullName);
-    setGrade(data.grade);
-    setAddress(data.address);
-    setModalVisible(true);
-    setEditMode(true);
-  };
+  // const handleEdit = (data) => {
+  //   setCurrentData(data);
+  //   // Assuming you have the state variables for these fields
+  //   setFullName(data.fullName);
+  //   setGrade(data.grade);
+  //   setAddress(data.address);
+  //   setModalVisible(true);
+  //   setEditMode(true);
+  // };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      const users = await getAllUsers();
-      setUsers(users);
-    };
+    const unsubscribe = listenToUsers(setUsers); // Set up the listener
 
-    fetchUsers();
-  }, []);
+    // Clean up the listener on component unmount
+    return () => {
+      unsubscribe();
+    };
+  }, []); // Empty dependency array to run only once on mount
+
 
   const renderTableHeader = (headers) => (
     <View style={styles.tableHeader}>
@@ -52,11 +53,11 @@ const Admin = () => {
     <TouchableOpacity
       style={styles.tableRow}
       onPress={() => {
-        console.log("User ID:", item.uid);
+        // console.log("User ID:", item.uid);
         fields.forEach((field) => {
-          console.log(
-            `${field.charAt(0).toUpperCase() + field.slice(1)}: ${item[field]}`
-          );
+          // console.log(
+          //   `${field.charAt(0).toUpperCase() + field.slice(1)}: ${item[field]}`
+          // );
         });
 
         // Show alert with options
@@ -83,7 +84,7 @@ const Admin = () => {
                   "Delete option selected for User ID:",
                   item.uid
                 );
-                console.log("Full User Information (pre-filter):", item);
+                //console.log("Full User Information (pre-filter):", item);
 
                 Alert.alert(
                   "Are you sure?",
@@ -94,7 +95,7 @@ const Admin = () => {
                       onPress: async () => {
                         const success = await deleteUser(item.uid);
                         if (success) {
-                          console.log("User deleted successfully");
+                          //console.log("User deleted successfully");
                           // Optionally, you can refetch the users after deletion
                           const updatedUsers = await getAllUsers();
                           setUsers(updatedUsers);
