@@ -19,13 +19,13 @@ import {
   getAvailableTutors,
   createStudent,
 } from "../../lib/firebase";
-import FormField from "../components/FormField";
-import { Dropdown } from "react-native-element-dropdown";
 import { TouchableOpacity } from "react-native";
-import { CheckBox } from "@rneui/themed";
 import { icons } from "../../constants";
 import { useNavigation } from "@react-navigation/native";
+import FormField from "../components/FormField";
 
+import { Dropdown } from "react-native-element-dropdown";
+import { CheckBox } from "@rneui/themed";
 
 
 const signUp = () => {
@@ -98,7 +98,8 @@ const signUp = () => {
         );
         Alert.alert("Student was created");
       } else if (status === "admin") {
-        await createAdmin(email, password);
+        //console.log("STATUS: ", status);
+        await createAdmin(email, password, status);
         Alert.alert("Admin was created");
       }
 
@@ -115,6 +116,12 @@ const signUp = () => {
   //Tutor
   const [chatLink, setChatLink] = useState("");
   const [meetingLink, setMeetingLink] = useState("");
+  const [subjects, setSubjects] = useState([
+    { subject: "Mathematics", capacity: 1, selected: false },
+    { subject: "English", capacity: 1, selected: false },
+    { subject: "Science", capacity: 1, selected: false },
+    { subject: "Geography", capacity: 1, selected: false },
+  ]);
   //Updateing the selected subjects for availability - Tutors
   const toggleSubjectSelection = (index) => {
     setSubjects((prevSubjects) => {
@@ -156,12 +163,6 @@ const signUp = () => {
   //Student
   const [grade, setGrade] = useState("");
   const [address, setAddress] = useState("");
-  const [subjects, setSubjects] = useState([
-    { subject: "Mathematics", capacity: 1, selected: false },
-    { subject: "English", capacity: 1, selected: false },
-    { subject: "Science", capacity: 1, selected: false },
-    { subject: "Geography", capacity: 1, selected: false },
-  ]);
   // Storing array for tutors - Student
   const [tutors, setTutors] = useState([]);
   //The state for storing availalbe tutors - Student
@@ -344,7 +345,7 @@ const signUp = () => {
                           iconStyle={styles.iconStyle}
                           value={
                             tutors.find((t) => t.subject === subjectObj.subject)
-                              ?.tutorId || "NoTutors"
+                              ?.tutorId || "No Tutors"
                           } // Track selected tutor ID
                           onChange={(item) => {
                             const subject = subjectObj.subject; // Get the subject name
