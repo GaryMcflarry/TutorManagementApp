@@ -42,8 +42,9 @@ const FIREBASE_AUTH = initializeAuth(FIREBASE_APP, {
 const FIREBASE_DB = getFirestore(FIREBASE_APP);
 
 // Functions to create a new users
-export const createAdmin = async (email, password) => {
+export const createAdmin = async (email, password, status) => {
   try {
+    console.log("Status: ", status);
     // Create a new user with Firebase Authentication
     const userCredential = await createUserWithEmailAndPassword(
       FIREBASE_AUTH,
@@ -56,6 +57,7 @@ export const createAdmin = async (email, password) => {
     await setDoc(doc(FIREBASE_DB, "User", userId), {
       email: email,
       password: password,
+      status: status,
     });
 
     return userCredential.user;
@@ -357,115 +359,217 @@ export const listenToUsers = (setUsers) => {
   return unsubscribe;
 };
 
-export const updateUser = async (user, subjects, setEditedUser, fullname, chatLink, meetingLink) => {
 
+const removeStudentFromTutor = async (tutorId, subject, studentId) => {
+  try {
+    const tutorRef = doc(FIREBASE_DB, "User", tutorId);
+    const tutorDoc = await getDoc(tutorRef);
+
+    if (tutorDoc.exists()) {
+      const tutorData = tutorDoc.data();
+      const updatedConnections = tutorData.connections.map((conn) => {
+        const [connSubject, connStudentId] = conn.split(" ");
+        // If the connection matches both subject and studentId, keep only the subject
+        return (connSubject === subject && connStudentId === studentId) 
+          ? connSubject 
+          : conn; // Keep the connection as is if it doesn't match
+      }).filter(conn => conn !== undefined); // Ensure no undefined values
+
+      // Update the tutor's document with the new connections
+      await updateDoc(tutorRef, { connections: updatedConnections });
+      console.log(`Updated tutor ${tutorId}: Removed student ID from subject ${subject}`);
+    } else {
+      console.error(`Tutor document not found for ID: ${tutorId}`);
+    }
+  } catch (error) {
+    console.error(`Error updating tutor's connections: ${error.message}`);
+  }
+};
+
+
+
+export const updateUser = async (
+  user,
+  subjects,
+  setEditedUser,
+  fullname,
+  meetingLink,
+  chatLink,
+  grade,
+  address,
+  connectionsArray,
+  tutorsToDelete
+) => {
   try {
     // Ensure the user is a tutor before proceeding
-    if (user.status !== "tutor") {
-      console.log("User is not a tutor, skipping updates.");
-      return false; // Return false if user is not a tutor
-    }
+    if (user.status === "student") {
+      try {
+        // Filter out connections with a null tutor ID
+        const filteredConnections = connectionsArray
+          .map((conn) => {
+            const [subject, tutorId] = conn.split(" "); // Split subject and tutorId
+            return tutorId && tutorId !== "NoTutors" ? conn : subject; // If tutorId is null or "No Tutors", return only the subject
+          })
+          .filter((conn) => conn); // Remove any empty entries
 
-    // Create a copy of the user's connections to update
-    const updatedConnections = [...user.connections];
+        console.log("Filtered Connections Array: ", filteredConnections);
 
-    // Process each subject to manage non-connected additions or deletions
-    subjects.forEach((subjectObj) => {
-      const { subject, capacity, selected } = subjectObj;
-
-      // Filter current connections for the specific subject
-      const subjectConnections = updatedConnections.filter((conn) => {
-        const [connSubject] = conn.includes(" ") ? conn.split(" ") : [conn];
-        return connSubject === subject;
-      });
-
-      const connectedCount = subjectConnections.filter((conn) =>
-        conn.includes(" ")
-      ).length; // Connections with IDs
-      const totalConnections = subjectConnections.length;
-
-      // Adding non-connected subjects if selected and under capacity
-      if (selected && capacity > connectedCount) {
-        const toAdd = capacity - totalConnections; // Only add up to reach capacity
-
-        for (let i = 0; i < toAdd; i++) {
-          updatedConnections.push(subject); // Add non-connected subject entries only
-        }
-      }
-
-      // Deleting only non-connected subjects if capacity is lower than current non-connected count
-      if (selected && capacity < totalConnections) {
-        const toRemove = totalConnections - capacity;
-        let removedCount = 0;
-
-        for (let i = updatedConnections.length - 1; i >= 0; i--) {
-          const [connSubject, studentId] = updatedConnections[i].includes(" ")
-            ? updatedConnections[i].split(" ")
-            : [updatedConnections[i], null];
-
-          // Only remove if it's a non-connected entry for the current subject
-          if (
-            connSubject === subject &&
-            !studentId &&
-            removedCount < toRemove
-          ) {
-            updatedConnections.splice(i, 1);
-            removedCount++;
-          }
-        }
-
-        // Alert if there's an attempt to go below connected capacity
-        if (toRemove > removedCount) {
-          alert(
-            `Unable to reduce capacity further for ${subject} due to existing student connections. Remove connected students first.`
-          );
-        }
-      }
-
-      // Deselecting subjects (when unchecking)
-      if (!selected) {
-        const hasActiveConnections = updatedConnections.some((connection) => {
-          const [connSubject] = connection.split(" ");
-          return connSubject === subject; // Check if the connection subject matches
+        // Update the user record in Firebase, including additional fields
+        const userRef = doc(FIREBASE_DB, "User", user.uid); // Correctly reference the document
+        await updateDoc(userRef, {
+          connections: filteredConnections,
+          fullname: fullname,
+          grade: grade,
+          address: address,
         });
 
-        if (hasActiveConnections) {
-          alert("Student(s) currently connected. Remove connections first.");
-          return; // Prevent deselecting
-        }
+        // Update the tutor's connections with the new student ID
+        await updateTutorsConnections(filteredConnections, user.uid);
 
-        // If no active connections, remove all occurrences of the subject from connections
-        for (let i = updatedConnections.length - 1; i >= 0; i--) {
-          const [connSubject] = updatedConnections[i].split(" ");
-          if (connSubject === subject) {
-            updatedConnections.splice(i, 1); // Remove all occurrences
+        
+        if (tutorsToDelete.length > 0) {
+           console.log("Tutors to delete: ",tutorsToDelete);
+
+           for (const removedConnection of tutorsToDelete) {
+             const [subjectForDeletion, tutorIdForDeletion] = removedConnection.split(" ");
+            //  console.log("Subject to delete: ", subjectForDeletion);
+            //  console.log("ID to delete: ", tutorIdForDeletion);
+             if (subjectForDeletion && tutorIdForDeletion) {
+               await removeStudentFromTutor(tutorIdForDeletion, subjectForDeletion, user.uid); // Remove connection from tutor
+             }
+           }
+         }
+
+        return true;
+      } catch (error) {
+        throw new Error(`Failed to create user: ${error.message}`);
+      }
+    } else {
+      // Create a copy of the user's connections to update
+      const updatedConnections = [...user.connections];
+
+      // Process each subject to manage non-connected additions or deletions
+      subjects.forEach((subjectObj) => {
+        const { subject, capacity, selected } = subjectObj;
+
+        // Filter current connections for the specific subject
+        const subjectConnections = updatedConnections.filter((conn) => {
+          const [connSubject] = conn.includes(" ") ? conn.split(" ") : [conn];
+          return connSubject === subject;
+        });
+
+        const connectedCount = subjectConnections.filter((conn) =>
+          conn.includes(" ")
+        ).length; // Connections with IDs
+        const totalConnections = subjectConnections.length;
+
+        // Adding non-connected subjects if selected and under capacity
+        if (selected && capacity > connectedCount) {
+          const toAdd = capacity - totalConnections; // Only add up to reach capacity
+
+          for (let i = 0; i < toAdd; i++) {
+            updatedConnections.push(subject); // Add non-connected subject entries only
           }
         }
+
+        // Deleting only non-connected subjects if capacity is lower than current non-connected count
+        if (selected && capacity < totalConnections) {
+          const toRemove = totalConnections - capacity;
+          let removedCount = 0;
+
+          for (let i = updatedConnections.length - 1; i >= 0; i--) {
+            const [connSubject, studentId] = updatedConnections[i].includes(" ")
+              ? updatedConnections[i].split(" ")
+              : [updatedConnections[i], null];
+
+            // Only remove if it's a non-connected entry for the current subject
+            if (
+              connSubject === subject &&
+              !studentId &&
+              removedCount < toRemove
+            ) {
+              updatedConnections.splice(i, 1);
+              removedCount++;
+            }
+          }
+
+          // Alert if there's an attempt to go below connected capacity
+          if (toRemove > removedCount) {
+            alert(
+              `Unable to reduce capacity further for ${subject} due to existing student connections. Remove connected students first.`
+            );
+          }
+        }
+
+        // Deselecting subjects (when unchecking)
+        if (!selected) {
+          const hasActiveConnections = updatedConnections.some((connection) => {
+            const [connSubject] = connection.split(" ");
+            return connSubject === subject; // Check if the connection subject matches
+          });
+
+          if (hasActiveConnections) {
+            alert("Student(s) currently connected. Remove connections first.");
+            return; // Prevent deselecting
+          }
+
+          // If no active connections, remove all occurrences of the subject from connections
+          for (let i = updatedConnections.length - 1; i >= 0; i--) {
+            const [connSubject] = updatedConnections[i].split(" ");
+            if (connSubject === subject) {
+              updatedConnections.splice(i, 1); // Remove all occurrences
+            }
+          }
+        }
+      });
+
+      // Update the editedUser connections state
+      setEditedUser((prevUser) => ({
+        ...prevUser,
+        connections: updatedConnections,
+      }));
+
+      // Update the user record in Firebase, including additional fields
+      const userRef = doc(FIREBASE_DB, "User", user.uid); // Correctly reference the document
+      await updateDoc(userRef, {
+        connections: updatedConnections,
+        fullname: fullname, // Update fullname
+        chatLink: chatLink, // Update chat link
+        meetingLink: meetingLink, // Update meeting link
+      });
+
+      // Handle removing subjects from tutors' connections
+      for (const tutorId of tutorsToDelete) {
+        const tutorRef = doc(FIREBASE_DB, "User", tutorId); // Reference tutor document
+
+        // Fetch the tutor's current connections
+        const tutorDoc = await getDoc(tutorRef);
+        if (tutorDoc.exists()) {
+          const tutorData = tutorDoc.data();
+          const tutorConnections = tutorData.connections || [];
+
+          // Filter out the subjects that need to be removed
+          const updatedTutorConnections = tutorConnections.filter(
+            (conn) => !tutorsToDelete.includes(conn.split(" ")[0]) // Assuming connection format is "Subject tutorId"
+          );
+
+          // Update the tutor's document with the new connections
+          await updateDoc(tutorRef, {
+            connections: updatedTutorConnections,
+          });
+        }
       }
-    });
 
-    // Update the editedUser connections state
-    setEditedUser((prevUser) => ({
-      ...prevUser,
-      connections: updatedConnections,
-    }));
-
-    // Update the user record in Firebase, including additional fields
-    const userRef = doc(FIREBASE_DB, "User", user.uid); // Correctly reference the document
-    await updateDoc(userRef, { // Use updateDoc for updating
-      connections: updatedConnections,
-      fullname: fullname, // Update fullname
-      chatLink: chatLink, // Update chat link
-      meetingLink: meetingLink, // Update meeting link
-    });
-
-    console.log("User updated successfully in Firebase");
-    return true; // Return true if successful
+      console.log("User updated successfully in Firebase");
+      return true; // Return true if successful
+    }
   } catch (error) {
     console.error("Error updating user:", error);
     return false; // Return false if there was an error
   }
 };
+
+
 
 const functions = getFunctions(FIREBASE_APP);
 

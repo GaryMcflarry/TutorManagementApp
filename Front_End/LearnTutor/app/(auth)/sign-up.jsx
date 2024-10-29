@@ -98,7 +98,8 @@ const signUp = () => {
         );
         Alert.alert("Student was created");
       } else if (status === "admin") {
-        await createAdmin(email, password);
+        //console.log("STATUS: ", status);
+        await createAdmin(email, password, status);
         Alert.alert("Admin was created");
       }
 
