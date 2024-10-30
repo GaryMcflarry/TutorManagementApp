@@ -23,7 +23,7 @@ import {
 } from "firebase/firestore";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 import { getFunctions, httpsCallable } from "firebase/functions";
-// Your web app's Firebase configuration
+// Your web app's Firebase configuration for implementation
 const firebaseConfig = {
   apiKey: "AIzaSyC2eF1Y6891qgShiJmeA9mhIrj9s4pIRAs",
   authDomain: "ltutor-7e7ab.firebaseapp.com",
@@ -35,13 +35,14 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const FIREBASE_APP = initializeApp(firebaseConfig);
-
 const FIREBASE_AUTH = initializeAuth(FIREBASE_APP, {
   persistence: getReactNativePersistence(ReactNativeAsyncStorage),
 });
 const FIREBASE_DB = getFirestore(FIREBASE_APP);
 
+
 // Functions to create a new users
+//=============================================================================
 export const createAdmin = async (email, password, status) => {
   try {
     console.log("Status: ", status);
@@ -146,53 +147,10 @@ export const createStudent = async (
     throw new Error(`Failed to create user: ${error.message}`);
   }
 };
-// Functions to update user Information
-const updateTutorsConnections = async (connectionsArray, studentId) => {
-  try {
-    for (const connection of connectionsArray) {
-      const [subject, tutorId] = connection.split(" "); // Split subject and tutorId
+//=============================================================================
 
-      // If tutorId exists, update their connections
-      if (tutorId) {
-        const tutorDocRef = doc(FIREBASE_DB, "User", tutorId);
-
-        // Get the current tutor's data
-        const tutorSnap = await getDoc(tutorDocRef);
-        if (tutorSnap.exists()) {
-          const tutorData = tutorSnap.data();
-          const existingConnections = tutorData.connections || [];
-
-          // Create a new connection with the student ID
-          const newConnection = `${subject} ${studentId}`;
-
-          // Find an existing non-connected entry for this subject
-          const existingSubjectIndex = existingConnections.findIndex(
-            (conn) => conn.startsWith(subject) && conn.split(" ").length === 1
-          );
-
-          if (existingSubjectIndex !== -1) {
-            // Replace the non-connected entry with the new connection
-            existingConnections[existingSubjectIndex] = newConnection;
-          } else {
-            // If there's no non-connected entry for that subject, add the new one
-            existingConnections.push(newConnection);
-          }
-
-          // Update tutor's document in Firestore
-          await setDoc(
-            tutorDocRef,
-            {
-              connections: existingConnections,
-            },
-            { merge: true }
-          ); // Use merge to avoid overwriting other fields
-        }
-      }
-    }
-  } catch (error) {
-    console.error(`Failed to update tutor's connections: ${error.message}`);
-  }
-};
+// 
+//=============================================================================
 // Function to sign in a user (Sign-in Page)
 export const login = async (email, password) => {
   try {
@@ -215,8 +173,11 @@ export const signOut = async () => {
     throw new Error(error);
   }
 };
+//=============================================================================
 
 //Functions for fetching information on users
+//=============================================================================
+
 export const getCurrentUser = async () => {
   try {
     const currentUser = FIREBASE_AUTH.currentUser;
@@ -358,7 +319,11 @@ export const listenToUsers = (setUsers) => {
   // Return the unsubscribe function to stop listening when needed
   return unsubscribe;
 };
+//=============================================================================
 
+
+// functions to update user information
+//=============================================================================
 
 const removeStudentFromTutor = async (tutorId, subject, studentId) => {
   try {
@@ -385,9 +350,6 @@ const removeStudentFromTutor = async (tutorId, subject, studentId) => {
     console.error(`Error updating tutor's connections: ${error.message}`);
   }
 };
-
-
-
 export const updateUser = async (
   user,
   subjects,
@@ -568,11 +530,57 @@ export const updateUser = async (
     return false; // Return false if there was an error
   }
 };
+// Functions to update user Information
+const updateTutorsConnections = async (connectionsArray, studentId) => {
+  try {
+    for (const connection of connectionsArray) {
+      const [subject, tutorId] = connection.split(" "); // Split subject and tutorId
 
+      // If tutorId exists, update their connections
+      if (tutorId) {
+        const tutorDocRef = doc(FIREBASE_DB, "User", tutorId);
 
+        // Get the current tutor's data
+        const tutorSnap = await getDoc(tutorDocRef);
+        if (tutorSnap.exists()) {
+          const tutorData = tutorSnap.data();
+          const existingConnections = tutorData.connections || [];
 
-const functions = getFunctions(FIREBASE_APP);
+          // Create a new connection with the student ID
+          const newConnection = `${subject} ${studentId}`;
 
+          // Find an existing non-connected entry for this subject
+          const existingSubjectIndex = existingConnections.findIndex(
+            (conn) => conn.startsWith(subject) && conn.split(" ").length === 1
+          );
+
+          if (existingSubjectIndex !== -1) {
+            // Replace the non-connected entry with the new connection
+            existingConnections[existingSubjectIndex] = newConnection;
+          } else {
+            // If there's no non-connected entry for that subject, add the new one
+            existingConnections.push(newConnection);
+          }
+
+          // Update tutor's document in Firestore
+          await setDoc(
+            tutorDocRef,
+            {
+              connections: existingConnections,
+            },
+            { merge: true }
+          ); // Use merge to avoid overwriting other fields
+        }
+      }
+    }
+  } catch (error) {
+    console.error(`Failed to update tutor's connections: ${error.message}`);
+  }
+};
+//=============================================================================
+
+// Delete users
+//=============================================================================
 export const deleteUser = async (userId) => {
   const functions = getFunctions();
   const deleteUserFunc = httpsCallable(functions, "deleteUser");
@@ -658,6 +666,11 @@ export const deleteUser = async (userId) => {
   }
 };
 
+//=============================================================================
+
+
+// Sending Functionality
+//=============================================================================
 //Functions for dealing with messaging (Conversation / [query] page)
 export const sendMessage = async (fromId, toId, messageContent) => {
   try {
@@ -753,6 +766,11 @@ export const fetchMessages = (userId, recipientId, setMessages) => {
   };
 };
 
+//=============================================================================
+
+// Homework functionality
+//=============================================================================
+
 //Functions for dealing with homework (Homework page)
 export const submittingHomework = async (
   studId,
@@ -825,3 +843,5 @@ export const deleteHomework = async (itemId) => {
     return false; // Optionally return false to indicate failure
   }
 };
+//=============================================================================
+
