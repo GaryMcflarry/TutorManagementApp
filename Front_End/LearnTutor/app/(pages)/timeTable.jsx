@@ -1,12 +1,16 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
-import StatusBarWrapper from '../components/statusBar'
+import StatusBarWrapper from '../components/statusBar';
+import MenuButton from "../components/MenuButton";
+import ResourceCard from '../components/ResourceCard';
 
-const TimeTable = () => {
+
+const TimeTable = ({ navigation }) => {
   return (
 
     <View className="bg-white h-full w-full">
       <StatusBarWrapper title="TimeTable">
+
       <TimeTableCard 
         time="14:00 - 15:00" 
         tutorName="Tutor Name" 
@@ -26,6 +30,7 @@ const TimeTable = () => {
         time="18:00 - 19:00" 
         sessionType="No Session"
       />
+
       </StatusBarWrapper>
 
     </View>
