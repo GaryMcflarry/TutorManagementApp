@@ -10,14 +10,27 @@ const TimeTable = ({ navigation }) => {
 
     <View className="bg-white h-full w-full">
       <StatusBarWrapper title="TimeTable">
-        <View className="w-full h-[70px] items-end p-3">
-          <MenuButton
-           handlePress={() => navigation.toggleDrawer()} 
-           />
-        </View>
-        <ResourceCard>
-          
-        </ResourceCard>
+
+      <TimeTableCard 
+        time="14:00 - 15:00" 
+        tutorName="Tutor Name" 
+        sessionType="Online" 
+        subject="Science" 
+        online
+      />
+
+      <TimeTableCard 
+        time="16:00 - 17:00" 
+        tutorName="Tutor Name" 
+        sessionType="Offline" 
+        subject="Mathematics"
+      />
+
+      <TimeTableCard 
+        time="18:00 - 19:00" 
+        sessionType="No Session"
+      />
+
       </StatusBarWrapper>
 
     </View>
