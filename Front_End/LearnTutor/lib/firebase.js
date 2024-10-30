@@ -845,3 +845,41 @@ export const deleteHomework = async (itemId) => {
 };
 //=============================================================================
 
+
+//Schedule Functionality
+////=============================================================================
+
+//Including state for the listerner and dynamic rendering
+export const fetchSessionDetails = async (sessionID, userRole) => {
+  try {
+    // Fetch session document from Firestore
+    const sessionDoc = await getDoc(doc(FIREBASE_DB, "Session", sessionID));
+    // Check if the session document exists
+    if (sessionDoc.exists()) {
+      const sessionData = sessionDoc.data(); // Get the session data
+
+      // Determine the opposite ID based on user role
+      const recipientId =
+        userRole === "student" ? sessionData.tutorId : sessionData.studentId;
+
+      // Fetch recipient info (tutor or student)
+      const recipientInfo = await fetchRecipientInfo(recipientId);
+
+      // Return combined session data with recipient info
+      return {
+        ...sessionData,
+        recipientInfo, // Add recipient info to session data
+      };
+    } else {
+      return null; // Return null if the session document does not exist
+    }
+  } catch (error) {
+    console.error("Error fetching session details: ", error);
+    return null; // Return null in case of error
+  }
+};
+
+
+
+
+//=============================================================================
