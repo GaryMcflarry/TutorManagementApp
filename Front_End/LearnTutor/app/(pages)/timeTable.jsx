@@ -1,29 +1,54 @@
-import { StyleSheet, Text, View, FlatList, ActivityIndicator, Modal, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  ActivityIndicator,
+  Modal,
+  TouchableOpacity,
+  RefreshControl,
+  Alert,
+} from "react-native";
 import React, { useEffect, useState, useMemo } from "react";
 import StatusBarWrapper from "../components/statusBar";
 import TimeTableCard from "../components/TimeTableCard";
 import MenuButton from "../components/MenuButton";
 import CustomButton from "../components/CustomButton";
-import FormField from "../components/FormField";
 import PagerView from "react-native-pager-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useGlobalContext } from "../../context/GlobalProvider";
-import { getSchedule, fetchSessionDetails } from "../../lib/firebase";
+import {
+  getConnectedUsers,
+  submittingSession,
+  deleteSession,
+} from "../../lib/firebase";
 import Icon from "react-native-vector-icons/Ionicons";
 import { Dropdown } from "react-native-element-dropdown";
-
+import useFirebase from "../../lib/useFirebase";
 
 const TimeTable = ({ navigation }) => {
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
+  const days = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
   const { user } = useGlobalContext();
 
+  const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const [selectedUser, setSelectedUser] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [subject, setSubject] = useState("");
+  const [timeSlot, setTimeslot] = useState([]);
+  const [type, setType] = useState("");
 
   const timeRanges = useMemo(() => {
-    const startHour = 8; // 08:00
-    const endHour = 16; // 16:00
+    const startHour = 8;
+    const endHour = 16;
     const ranges = [];
     for (let hour = startHour; hour <= endHour; hour++) {
       const start = `${String(hour).padStart(2, "0")}:00`;
@@ -32,18 +57,89 @@ const TimeTable = ({ navigation }) => {
     }
     setLoading(false);
     return ranges;
-  }, []); // [] dependency ensures it only runs once
+  }, []);
+
+  const { data: userInfo, refetch } = useFirebase(() =>
+    getConnectedUsers(user)
+  );
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
+
+  const getUserOptions = (users) => {
+    if (!Array.isArray(users) || users.length === 0) return [];
+    let options = [];
+    users.forEach((user) => {
+      if (user !== null) {
+        //console.log("USER OPTIONS: ", user)
+        options.push({
+          label: `${user.fullname} (${user.subject})`,
+          value: `${user.subject} ${user.id}`,
+        });
+      }
+    });
+    return options;
+  };
+
+  const userOptions = getUserOptions(userInfo);
+
+  const submitSession = async () => {
+    try {
+      if (
+        (selectedUserId === "" || timeSlot.length === 0 || subject === "",
+        type === "")
+      ) {
+        Alert.alert("Please fill out all fields!");
+        return;
+      }
+
+      if (user.status === "student") {
+        await submittingSession(
+          user.uid,
+          selectedUserId,
+          subject,
+          timeSlot,
+          type,
+          user.status,
+          user.address
+        );
+      } else {
+        await submittingSession(
+          user.uid,
+          selectedUserId,
+          subject,
+          timeSlot,
+          type,
+          user.status,
+          null
+        );
+      }
+
+      Alert.alert("Session was added");
+      // Reset fields only if submission is successful
+      setModalVisible(false);
+      setTimeslot([]);
+      setSelectedUserId("");
+      setSubject("");
+      setType("");
+    } catch (error) {
+      console.error("Error submitting session:", error);
+      Alert.alert(
+        "An error occurred while submitting the session. Please try again."
+      );
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBarWrapper title="Timetable">
-      <Modal
+        <Modal
           animationType="fade"
           transparent={true}
           visible={modalVisible}
-          onRequestClose={() => {
-            setModalVisible(!modalVisible);
-          }}
+          onRequestClose={() => setModalVisible(!modalVisible)}
         >
           <View className="flex-1 justify-center items-center">
             <View
@@ -53,7 +149,14 @@ const TimeTable = ({ navigation }) => {
               <View className="w-[300px] h-[30px] flex-row justify-end items-center">
                 <TouchableOpacity
                   style={styles.shadow}
-                  onPress={() => setModalVisible(!modalVisible)}
+                  onPress={() => {
+                    setModalVisible(!modalVisible);
+                    setSubject("");
+                    setSelectedUserId("");
+                    setSelectedUser("");
+                    setTimeslot([]);
+                    setType("");
+                  }}
                 >
                   <Text style={styles.textStyle} className="text-lg">
                     X
@@ -65,33 +168,146 @@ const TimeTable = ({ navigation }) => {
               </Text>
               <Dropdown
                 style={styles.dropdown}
-                data={[]}
+                data={userOptions}
                 labelField="label"
                 valueField="value"
-                placeholder="Select Student"
+                placeholder="Select User"
                 placeholderStyle={styles.placeholderStyle}
                 selectedTextStyle={styles.selectedTextStyle}
                 itemTextStyle={styles.itemTextStyle}
                 conStyle={styles.iconStyle}
-                value={null}
+                value={selectedUser} // Ensure dropdown reflects the selected value
                 onChange={(item) => {
-                 
+                  setSelectedUser(item);
+                  const [subjectValue, userId] = item.value.split(" ");
+                  setSelectedUserId(userId);
+                  setSubject(subjectValue);
                 }}
               />
-              <FormField
-                placeholder="Write down homework..."
-                // handleChangeText={}
-              />
-              <View className="w-[270px] h-[310px] border-none rounded-xl bg-[#FFFFFF]">
-                
+              <View className=" flex-row w-[80%] h-[20%] justify-between items-center p-6">
+                <CustomButton
+                  title="Online"
+                  containerStyles={
+                    "border-2 border-white rounded-md p-3 bg-primary"
+                  }
+                  handlePress={() => setType("Online")}
+                />
+                <CustomButton
+                  title="In Person"
+                  containerStyles={
+                    "border-2 border-white rounded-md p-3 bg-primary"
+                  }
+                  handlePress={() => setType("inperson")}
+                />
               </View>
-              <TouchableOpacity
-                className="bg-primary p-3 border-none rounded-xl mt-10"
-                style={styles.shadow}
-                // onPress={}
-              >
-                <Text style={styles.textStyle}>Submit</Text>
-              </TouchableOpacity>
+              <View className="w-[270px] h-[310px] justify-center items-center border-none rounded-xl bg-[#FFFFFF]">
+                <PagerView
+                  className="w-full h-full justify-center items-center"
+                  style={{ flex: 1 }}
+                  initialPage={0}
+                >
+                  {days.map((day) => (
+                    <View key={day} style={styles.page}>
+                      <View className="flex-row justify-between items-center px-4">
+                        <Icon
+                          name="chevron-back-outline"
+                          color="#4F7978"
+                          size={30}
+                        />
+                        <Text className="text-base mx-8 font-semibold text-[#4F7978]">
+                          {day}
+                        </Text>
+                        <Icon
+                          name="chevron-forward-outline"
+                          color="#4F7978"
+                          size={30}
+                        />
+                      </View>
+                      <FlatList
+                        className="w-full h-full"
+                        data={timeRanges}
+                        keyExtractor={(item) => item}
+                        renderItem={({ item }) => {
+                          const matchedAvailability = user.availability.find(
+                            (avail) => {
+                              const [availabilityDay, availabilityTime] =
+                                avail.split(", ");
+                              return (
+                                availabilityDay === day &&
+                                availabilityTime === item
+                              );
+                            }
+                          );
+
+                          return (
+                            <>
+                              {matchedAvailability ||
+                              timeSlot.includes(`${day}, ${item}`) ? (
+                                <TouchableOpacity
+                                  onPress={() =>
+                                    Alert.alert("Timeslot is occupied!")
+                                  }
+                                >
+                                  <View
+                                    style={styles.timeSlotContainer}
+                                    className="bg-tertiary"
+                                  >
+                                    <Text style={styles.timeSlotText}>
+                                      {item}
+                                    </Text>
+                                  </View>
+                                </TouchableOpacity>
+                              ) : (
+                                <TouchableOpacity
+                                  onPress={() => {
+                                    setLoading(true); // Start the loading indicator
+                                    setTimeslot((prevTimeslots) => [
+                                      ...prevTimeslots,
+                                      `${day}, ${item}`,
+                                    ]);
+
+                                    // Delay turning off the loading indicator
+                                    setTimeout(() => {
+                                      //console.log("TimeSlot: ", timeSlot);
+                                      setLoading(false); // Stop the loading indicator after a brief delay
+                                    }, 100); // Adjust delay as necessary, e.g., 500 ms
+                                  }}
+                                >
+                                  <View
+                                    style={styles.timeSlotContainer}
+                                    className="bg-primary"
+                                  >
+                                    <Text style={styles.timeSlotText}>
+                                      {item}
+                                    </Text>
+                                  </View>
+                                </TouchableOpacity>
+                              )}
+                            </>
+                          );
+                        }}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={styles.flatListContent}
+                      />
+                    </View>
+                  ))}
+                </PagerView>
+              </View>
+              {loading ? (
+                <ActivityIndicator
+                  className="my-5"
+                  size="large"
+                  color="#FEA07D"
+                />
+              ) : (
+                <TouchableOpacity
+                  className="bg-primary p-3 border-none rounded-xl mt-10"
+                  style={styles.shadow}
+                  onPress={submitSession}
+                >
+                  <Text style={styles.textStyle}>Submit</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </Modal>
@@ -108,37 +324,50 @@ const TimeTable = ({ navigation }) => {
             <View key={day} style={styles.page}>
               <View className="flex-row justify-between items-center px-4">
                 <Icon name="chevron-back-outline" color="#4F7978" size={50} />
-                <Text className="text-xl mx-8 font-semibold text-[#4F7978]">{day}</Text>
-                <Icon name="chevron-forward-outline" color="#4F7978" size={50} />
-              </View>
-              {loading ? (
-                <ActivityIndicator size="large" color="#4F7978" />
-              ) : (
-                <FlatList
-                  data={timeRanges}
-                  keyExtractor={(item) => item}
-                  renderItem={({ item }) => {
-                    const matchedAvailability = user.availability.find((avail) => {
-                      const [availabilityDay, availabilityTime] = avail.split(", ");
-                      return availabilityDay === day && availabilityTime === item;
-                    });
-
-                    const sessionId = matchedAvailability
-                      ? matchedAvailability.split(", ")[2]
-                      : null;
-
-                    return (
-                      <TimeTableCard
-                        time={item}
-                        day={day}
-                        sessionId={sessionId}
-                        userRole={user.status}
-                      />
-                    );
-                  }}
-                  contentContainerStyle={styles.flatListContent}
+                <Text className="text-xl mx-8 font-semibold text-[#4F7978]">
+                  {day}
+                </Text>
+                <Icon
+                  name="chevron-forward-outline"
+                  color="#4F7978"
+                  size={50}
                 />
-              )}
+              </View>
+
+              <FlatList
+                data={timeRanges}
+                keyExtractor={(item) => item}
+                renderItem={({ item }) => {
+                  const matchedAvailability = user.availability.find(
+                    (avail) => {
+                      const [availabilityDay, availabilityTime] =
+                        avail.split(", ");
+                      return (
+                        availabilityDay === day && availabilityTime === item
+                      );
+                    }
+                  );
+                  const sessionId = matchedAvailability
+                    ? matchedAvailability.split(", ")[2]
+                    : null;
+                  return (
+                    <TimeTableCard
+                      time={item}
+                      day={day}
+                      sessionId={sessionId}
+                      userRole={user.status}
+                    />
+                  );
+                }}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.flatListContent}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                  />
+                }
+              />
             </View>
           ))}
         </PagerView>
@@ -182,6 +411,26 @@ const styles = StyleSheet.create({
   },
   iconStyle: {
     tintColor: "#FFFFFF",
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  timeSlotContainer: {
+    width: "100%",
+    paddingVertical: 10,
+    marginVertical: 5,
+    alignItems: "center",
+    borderRadius: 10,
+  },
+  timeSlotText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
+  },
+  flatListContent: {
+    paddingBottom: 20,
+    width: "100%",
   },
 });
 

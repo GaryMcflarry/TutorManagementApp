@@ -40,7 +40,6 @@ const FIREBASE_AUTH = initializeAuth(FIREBASE_APP, {
 });
 const FIREBASE_DB = getFirestore(FIREBASE_APP);
 
-
 // Functions to create a new users
 //=============================================================================
 export const createAdmin = async (email, password, status) => {
@@ -88,7 +87,7 @@ export const createTutor = async (
     await setDoc(doc(FIREBASE_DB, "User", userId), {
       email: email,
       password: password,
-      availability: null,
+      availability: [],
       fullname: fullName,
       chatLink: chatLink,
       meetingLink: meetingLink,
@@ -131,6 +130,7 @@ export const createStudent = async (
     // Add the user data to Firestore
     await setDoc(doc(FIREBASE_DB, "User", userId), {
       email: email,
+      availability: [],
       password: password,
       fullname: fullName,
       status: status,
@@ -149,7 +149,7 @@ export const createStudent = async (
 };
 //=============================================================================
 
-// 
+//
 //=============================================================================
 // Function to sign in a user (Sign-in Page)
 export const login = async (email, password) => {
@@ -212,6 +212,7 @@ export const getConnectedUsers = async (user) => {
       if (userId) {
         const userDoc = await getDoc(doc(FIREBASE_DB, "User", userId));
         if (userDoc.exists()) {
+          console.log("CONNECTED USER:", userDoc.data());
           return { id: userDoc.id, subject, ...userDoc.data() };
         }
       } else {
@@ -234,7 +235,7 @@ export const fetchRecipientInfo = async (userId) => {
     const userDoc = await getDoc(doc(FIREBASE_DB, "User", userId));
     // Check if the user document exists and return the user data
     if (userDoc.exists()) {
-      // console.log('text', userDoc.data());
+      console.log("text", userDoc.data());
       return userDoc.data(); // Return the data correctly
     } else {
       return null; // Return null if the document does not exist
@@ -321,7 +322,6 @@ export const listenToUsers = (setUsers) => {
 };
 //=============================================================================
 
-
 // functions to update user information
 //=============================================================================
 
@@ -332,17 +332,21 @@ const removeStudentFromTutor = async (tutorId, subject, studentId) => {
 
     if (tutorDoc.exists()) {
       const tutorData = tutorDoc.data();
-      const updatedConnections = tutorData.connections.map((conn) => {
-        const [connSubject, connStudentId] = conn.split(" ");
-        // If the connection matches both subject and studentId, keep only the subject
-        return (connSubject === subject && connStudentId === studentId) 
-          ? connSubject 
-          : conn; // Keep the connection as is if it doesn't match
-      }).filter(conn => conn !== undefined); // Ensure no undefined values
+      const updatedConnections = tutorData.connections
+        .map((conn) => {
+          const [connSubject, connStudentId] = conn.split(" ");
+          // If the connection matches both subject and studentId, keep only the subject
+          return connSubject === subject && connStudentId === studentId
+            ? connSubject
+            : conn; // Keep the connection as is if it doesn't match
+        })
+        .filter((conn) => conn !== undefined); // Ensure no undefined values
 
       // Update the tutor's document with the new connections
       await updateDoc(tutorRef, { connections: updatedConnections });
-      console.log(`Updated tutor ${tutorId}: Removed student ID from subject ${subject}`);
+      console.log(
+        `Updated tutor ${tutorId}: Removed student ID from subject ${subject}`
+      );
     } else {
       console.error(`Tutor document not found for ID: ${tutorId}`);
     }
@@ -388,19 +392,23 @@ export const updateUser = async (
         // Update the tutor's connections with the new student ID
         await updateTutorsConnections(filteredConnections, user.uid);
 
-        
         if (tutorsToDelete.length > 0) {
-           console.log("Tutors to delete: ",tutorsToDelete);
+          console.log("Tutors to delete: ", tutorsToDelete);
 
-           for (const removedConnection of tutorsToDelete) {
-             const [subjectForDeletion, tutorIdForDeletion] = removedConnection.split(" ");
+          for (const removedConnection of tutorsToDelete) {
+            const [subjectForDeletion, tutorIdForDeletion] =
+              removedConnection.split(" ");
             //  console.log("Subject to delete: ", subjectForDeletion);
             //  console.log("ID to delete: ", tutorIdForDeletion);
-             if (subjectForDeletion && tutorIdForDeletion) {
-               await removeStudentFromTutor(tutorIdForDeletion, subjectForDeletion, user.uid); // Remove connection from tutor
-             }
-           }
-         }
+            if (subjectForDeletion && tutorIdForDeletion) {
+              await removeStudentFromTutor(
+                tutorIdForDeletion,
+                subjectForDeletion,
+                user.uid
+              ); // Remove connection from tutor
+            }
+          }
+        }
 
         return true;
       } catch (error) {
@@ -668,17 +676,12 @@ export const deleteUser = async (userId) => {
 
 //=============================================================================
 
-
 // Sending Functionality
 //=============================================================================
 //Functions for dealing with messaging (Conversation / [query] page)
 export const sendMessage = async (fromId, toId, messageContent) => {
   try {
-    const newMessageRef = doc(
-      FIREBASE_DB,
-      "Conversations",
-      generateMessageId()
-    ); // Generate a new message ID
+    const newMessageRef = doc(FIREBASE_DB, "Conversations", generateId()); // Generate a new message ID
     await setDoc(newMessageRef, {
       fromId: fromId,
       message: messageContent,
@@ -691,7 +694,7 @@ export const sendMessage = async (fromId, toId, messageContent) => {
   }
 };
 // Helper function to generate a unique message ID
-const generateMessageId = () => {
+const generateId = () => {
   return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
 export const fetchMessages = (userId, recipientId, setMessages) => {
@@ -780,7 +783,7 @@ export const submittingHomework = async (
   dueDate
 ) => {
   try {
-    const newHWRef = doc(FIREBASE_DB, "Homework", generateMessageId()); // Generate a new message ID
+    const newHWRef = doc(FIREBASE_DB, "Homework", generateId()); // Generate a new message ID
     await setDoc(newHWRef, {
       description: description,
       dueDate: dueDate,
@@ -845,18 +848,18 @@ export const deleteHomework = async (itemId) => {
 };
 //=============================================================================
 
-
 //Schedule Functionality
 ////=============================================================================
 
 //Including state for the listerner and dynamic rendering
-export const fetchSessionDetails = async (sessionID, userRole) => {
-  try {
-    // Fetch session document from Firestore
-    const sessionDoc = await getDoc(doc(FIREBASE_DB, "Session", sessionID));
-    // Check if the session document exists
+export const listenToSessionDetails = (sessionID, userRole, setSessionDetails) => {
+  const sessionRef = doc(FIREBASE_DB, "Session", sessionID); // Reference to the session document
+
+  // Set up a listener for real-time updates
+  return onSnapshot(sessionRef, async (sessionDoc) => {
     if (sessionDoc.exists()) {
       const sessionData = sessionDoc.data(); // Get the session data
+      console.log("Session Data: ", sessionData);
 
       // Determine the opposite ID based on user role
       const recipientId =
@@ -864,22 +867,144 @@ export const fetchSessionDetails = async (sessionID, userRole) => {
 
       // Fetch recipient info (tutor or student)
       const recipientInfo = await fetchRecipientInfo(recipientId);
+      console.log("Recipient info: ", recipientInfo);
 
-      // Return combined session data with recipient info
-      return {
+      // Update session details with recipient info
+      setSessionDetails({
         ...sessionData,
         recipientInfo, // Add recipient info to session data
-      };
+      });
     } else {
-      return null; // Return null if the session document does not exist
+      setSessionDetails(null); // Set session details to null if the document doesn't exist
     }
+  }, (error) => {
+    console.error("Error listening to session details: ", error);
+    setSessionDetails(null); // Set session details to null in case of error
+  });
+};
+
+export const submittingSession = async (
+  submitId,
+  toId,
+  subject,
+  timeSlot,
+  type,
+  userRole,
+  userAddress
+) => {
+  try {
+    //console.log("SUBMITId: ", submitId);
+    //console.log("TOID: ", toId)
+    let typeForSubmit;
+
+    if (type === "Online") {
+      typeForSubmit = type;
+    } else {
+      if (userRole === "student") {
+        typeForSubmit = userAddress;
+      } else {
+        // Ensure fetchRecipientInfo is awaited
+        const recipientInfo = await fetchRecipientInfo(toId);
+        typeForSubmit = recipientInfo ? recipientInfo.address : undefined; // Handle case where recipient info might not exist
+      }
+    }
+
+    const sessionId = generateId();
+    const newSessionRef = doc(FIREBASE_DB, "Session", sessionId); // Create a reference for the new session
+
+    // Create the new session document
+    await setDoc(newSessionRef, {
+      studentId: userRole === "student" ? submitId : toId, // Assign studentId based on userRole
+      tutorId: userRole === "tutor" ? submitId : toId, // Assign tutorId based on userRole
+      subject: subject, // The subject for the session
+      type: typeForSubmit, // The type of session (online/in-person)
+    });
+
+    // Update availability for both the student and the tutor
+    const userIds = [submitId, toId]; // Store the IDs of the involved users
+    const updatedAvailabilityPromises = userIds.map(async (userId) => {
+      const userDocRef = doc(FIREBASE_DB, "User", userId); // Reference to the user document
+      const userDoc = await getDoc(userDocRef); // Fetch the user document
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        //console.log("USER DATA!: ", userData)
+        const updatedAvailability = timeSlot.map((slot) => {
+          //console.log("SLOT: ", `${slot}, ${sessionId}`)
+          return `${slot}, ${sessionId}`; // Add sessionId to each timeslot entry
+        });
+
+        // Update the availability array
+        const newAvailability = [
+          ...userData.availability,
+          ...updatedAvailability,
+        ]; // Combine existing and new availability
+
+        // Update the user document
+        await setDoc(
+          userDocRef,
+          {
+            availability: newAvailability,
+          },
+          { merge: true }
+        ); // Use merge to retain existing data
+      }
+    });
+
+    // Wait for all availability updates to complete
+    await Promise.all(updatedAvailabilityPromises);
+
+    console.log("Session submitted and availability updated successfully!");
   } catch (error) {
-    console.error("Error fetching session details: ", error);
-    return null; // Return null in case of error
+    console.error("Error submitting session: ", error);
   }
 };
 
+export const deleteSession = async (sessionId) => {
+  try {
+    // Get a reference to the specific document within the Session collection
+    const sessionDocRef = doc(FIREBASE_DB, "Session", sessionId);
+    
+    // Fetch the session document to obtain student and tutor IDs
+    const sessionDoc = await getDoc(sessionDocRef);
+    
+    if (sessionDoc.exists()) {
+      const sessionData = sessionDoc.data();
+      const userIds = [sessionData.studentId, sessionData.tutorId];
 
+      // Delete the session document
+      await deleteDoc(sessionDocRef);
 
+      // Update availability for both the student and the tutor
+      const updatedAvailabilityPromises = userIds.map(async (userId) => {
+        const userDocRef = doc(FIREBASE_DB, "User", userId);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          // Filter out availability entries containing the session ID
+          const updatedAvailability = userData.availability.filter(slot => {
+            const parts = slot.split(", "); // Split by ", " to separate day, time, and sessionId
+            return parts.length < 3 || parts[2] !== sessionId; // Keep entries not matching the sessionId
+          });
 
+          // Update the user document with the new availability
+          await setDoc(userDocRef, {
+            availability: updatedAvailability
+          }, { merge: true }); // Use merge to retain existing data
+        }
+      });
+
+      // Wait for all availability updates to complete
+      await Promise.all(updatedAvailabilityPromises);
+
+      console.log("Session deleted and availability updated successfully!");
+    } else {
+      console.log("Session not found.");
+    }
+  } catch (error) {
+    console.error("Error deleting session: ", error);
+    return false; // Optionally return false to indicate failure
+  }
+};
 //=============================================================================

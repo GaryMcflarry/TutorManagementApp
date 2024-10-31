@@ -1,34 +1,42 @@
 import React, { useEffect, useState } from "react";
 import { Card, Text } from "@rneui/themed";
-import { View, StyleSheet } from "react-native";
-import { fetchSessionDetails } from "../../lib/firebase";
+import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { listenToSessionDetails, deleteSession } from "../../lib/firebase";
 
 const TimeTableCard = ({ sessionId, time, userRole, day }) => {
   const [sessionDetails, setSessionDetails] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getSessionDetails = async () => {
+    let unsubscribe;
+
+    const getSessionDetails = () => {
       if (sessionId) {
-        const sessionData = await fetchSessionDetails(sessionId, userRole);
-        setSessionDetails(sessionData);
-        console.log("Session Details: ", sessionDetails)
+        unsubscribe = listenToSessionDetails(
+          sessionId,
+          userRole,
+          setSessionDetails
+        );
       }
       setLoading(false);
     };
 
     getSessionDetails();
+
+    // Cleanup listener on component unmount
+    return () => {
+      if (unsubscribe) {
+        unsubscribe(); // Unsubscribe from listener to avoid memory leaks
+      }
+    };
   }, [sessionId, userRole]);
 
-  
   const subject = sessionDetails?.subject;
   const fullname = sessionDetails?.recipientInfo.fullname;
-  const sessionType = sessionDetails?.type
+  const sessionType = sessionDetails?.type;
 
-
-
-   // Dynamic background colors based on subject
-   const backgroundColors = {
+  // Dynamic background colors based on subject
+  const backgroundColors = {
     English: "#822323",
     Science: "#2B572C",
     Mathematics: "#B5C00B",
@@ -36,12 +44,18 @@ const TimeTableCard = ({ sessionId, time, userRole, day }) => {
     default: "#D9D9D9", // Fallback color
   };
 
-  const getBackgroundColor = () => backgroundColors[subject] || backgroundColors.default;
-
+  const getBackgroundColor = () =>
+    backgroundColors[subject] || backgroundColors.default;
 
   if (loading) {
     return (
-      <View style={{ justifyContent: "center", alignItems: "center", marginVertical: 10 }}>
+      <View
+        style={{
+          justifyContent: "center",
+          alignItems: "center",
+          marginVertical: 10,
+        }}
+      >
         <Text style={styles.fullname}>Loading...</Text>
       </View>
     );
@@ -61,20 +75,53 @@ const TimeTableCard = ({ sessionId, time, userRole, day }) => {
   }
 
   return (
-    <Card containerStyle={[styles.card, {backgroundColor: getBackgroundColor()}]}>
-      <View style={styles.header}>
-        <Text style={styles.time}>{time}</Text>
-        <Text style={styles.subject}>{subject}</Text>
-      </View>
-      <View style={{ justifyContent: "center", alignItems: "center" }}>
-        <Text style={styles.fullname}>
-          {fullname}
-        </Text>
-        <Text style={styles.fullname}>
-          {sessionType}
-        </Text>
-      </View>
-    </Card>
+    <TouchableOpacity
+      onPress={() => {
+        Alert.alert(
+          "Delete Session",
+          "Are you sure you want to delete this session?",
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
+            },
+            {
+              text: "OK",
+              onPress: async () => {
+                try {
+                  // Call the deleteSession function and wait for it to complete
+                  await deleteSession(sessionId);
+                  // Show success alert after deletion
+                  Alert.alert("Success", "Session was deleted successfully!");
+                } catch (error) {
+                  Alert.alert(
+                    "Error",
+                    "There was a problem deleting the session."
+                  );
+                  console.error("Error deleting session: ", error);
+                }
+              },
+            },
+          ]
+        );
+      }}
+    >
+      <Card
+        containerStyle={[
+          styles.card,
+          { backgroundColor: getBackgroundColor() },
+        ]}
+      >
+        <View style={styles.header}>
+          <Text style={styles.time}>{time}</Text>
+          <Text style={styles.subject}>{subject}</Text>
+        </View>
+        <View style={{ justifyContent: "center", alignItems: "center" }}>
+          <Text style={styles.fullname}>{fullname}</Text>
+          <Text style={styles.fullname}>{sessionType}</Text>
+        </View>
+      </Card>
+    </TouchableOpacity>
   );
 };
 
