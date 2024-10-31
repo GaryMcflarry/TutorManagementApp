@@ -27,6 +27,7 @@ import { Dropdown } from "react-native-element-dropdown";
 import useFirebase from "../../lib/useFirebase";
 
 const TimeTable = ({ navigation }) => {
+
   const days = [
     "Monday",
     "Tuesday",
@@ -35,6 +36,8 @@ const TimeTable = ({ navigation }) => {
     "Friday",
     "Saturday",
   ];
+
+
   const { user } = useGlobalContext();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -42,11 +45,13 @@ const TimeTable = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
+
   const [subject, setSubject] = useState("");
   const [timeSlot, setTimeslot] = useState([]);
   const [type, setType] = useState("");
 
   const timeRanges = useMemo(() => {
+
     const startHour = 8;
     const endHour = 16;
     const ranges = [];
@@ -57,11 +62,13 @@ const TimeTable = ({ navigation }) => {
     }
     setLoading(false);
     return ranges;
+
   }, []);
 
   const { data: userInfo, refetch } = useFirebase(() =>
     getConnectedUsers(user)
   );
+
   const onRefresh = async () => {
     setRefreshing(true);
     await refetch();
@@ -124,6 +131,7 @@ const TimeTable = ({ navigation }) => {
       setSelectedUserId("");
       setSubject("");
       setType("");
+      
     } catch (error) {
       console.error("Error submitting session:", error);
       Alert.alert(

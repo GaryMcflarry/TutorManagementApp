@@ -18,6 +18,7 @@ import {
   updateUser,
   getAvailableTutors,
   fetchRecipientInfo,
+  deleteAssociations
 } from "../../lib/firebase";
 import { ActivityIndicator, KeyboardAvoidingView } from "react-native";
 import FormField from "../components/FormField";
@@ -330,8 +331,8 @@ const Admin = () => {
   //Function to obtain the neccesary information to delete the connection for the student and tutor
   const handleRemoveConnection = (subject) => {
     Alert.alert(
-      "Remove Connection",
-      "Are you sure you want to remove this connection?",
+      "Remove Connection?",
+      "This will remove all exisitng data between these users",
       [
         {
           text: "Cancel",
@@ -339,21 +340,25 @@ const Admin = () => {
         },
         {
           text: "OK",
-          onPress: () => {
+          onPress: async () => {
+            setLoading(true);
+  
+            let tutorId = null;
+  
             setEditedUser((prevUser) => {
               // Find the connection to remove
               const removedConnection = prevUser.connections.find((conn) =>
                 conn.includes(subject)
               );
-
+  
               if (removedConnection && removedConnection.includes(" ")) {
-                const [_, tutorId] = removedConnection.split(" ");
+                [, tutorId] = removedConnection.split(" ");
                 setTutorsToDelete((prevTutors) => [
                   ...prevTutors,
                   `${subject} ${tutorId}`, // Store the subject with tutor ID
                 ]);
               }
-
+  
               // Return the updated connections without the removed subject connection
               return {
                 ...prevUser,
@@ -362,6 +367,12 @@ const Admin = () => {
                 ),
               };
             });
+  
+            if (tutorId) {
+              await deleteAssociations(editedUser.uid, tutorId);
+            }
+  
+            setLoading(false);
           },
         },
       ]

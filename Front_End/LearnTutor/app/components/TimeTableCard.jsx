@@ -4,6 +4,7 @@ import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { listenToSessionDetails, deleteSession } from "../../lib/firebase";
 
 const TimeTableCard = ({ sessionId, time, userRole, day }) => {
+  
   const [sessionDetails, setSessionDetails] = useState(null);
   const [loading, setLoading] = useState(true);
 
