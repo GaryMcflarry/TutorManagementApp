@@ -23,7 +23,7 @@ import {
 } from "firebase/firestore";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 import { getFunctions, httpsCallable } from "firebase/functions";
-// Your web app's Firebase configuration
+// Your web app's Firebase configuration for implementation
 const firebaseConfig = {
   apiKey: "AIzaSyC2eF1Y6891qgShiJmeA9mhIrj9s4pIRAs",
   authDomain: "ltutor-7e7ab.firebaseapp.com",
@@ -35,13 +35,13 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const FIREBASE_APP = initializeApp(firebaseConfig);
-
 const FIREBASE_AUTH = initializeAuth(FIREBASE_APP, {
   persistence: getReactNativePersistence(ReactNativeAsyncStorage),
 });
 const FIREBASE_DB = getFirestore(FIREBASE_APP);
 
 // Functions to create a new users
+//=============================================================================
 export const createAdmin = async (email, password, status) => {
   try {
     console.log("Status: ", status);
@@ -87,7 +87,7 @@ export const createTutor = async (
     await setDoc(doc(FIREBASE_DB, "User", userId), {
       email: email,
       password: password,
-      availability: null,
+      availability: [],
       fullname: fullName,
       chatLink: chatLink,
       meetingLink: meetingLink,
@@ -130,6 +130,7 @@ export const createStudent = async (
     // Add the user data to Firestore
     await setDoc(doc(FIREBASE_DB, "User", userId), {
       email: email,
+      availability: [],
       password: password,
       fullname: fullName,
       status: status,
@@ -146,53 +147,10 @@ export const createStudent = async (
     throw new Error(`Failed to create user: ${error.message}`);
   }
 };
-// Functions to update user Information
-const updateTutorsConnections = async (connectionsArray, studentId) => {
-  try {
-    for (const connection of connectionsArray) {
-      const [subject, tutorId] = connection.split(" "); // Split subject and tutorId
+//=============================================================================
 
-      // If tutorId exists, update their connections
-      if (tutorId) {
-        const tutorDocRef = doc(FIREBASE_DB, "User", tutorId);
-
-        // Get the current tutor's data
-        const tutorSnap = await getDoc(tutorDocRef);
-        if (tutorSnap.exists()) {
-          const tutorData = tutorSnap.data();
-          const existingConnections = tutorData.connections || [];
-
-          // Create a new connection with the student ID
-          const newConnection = `${subject} ${studentId}`;
-
-          // Find an existing non-connected entry for this subject
-          const existingSubjectIndex = existingConnections.findIndex(
-            (conn) => conn.startsWith(subject) && conn.split(" ").length === 1
-          );
-
-          if (existingSubjectIndex !== -1) {
-            // Replace the non-connected entry with the new connection
-            existingConnections[existingSubjectIndex] = newConnection;
-          } else {
-            // If there's no non-connected entry for that subject, add the new one
-            existingConnections.push(newConnection);
-          }
-
-          // Update tutor's document in Firestore
-          await setDoc(
-            tutorDocRef,
-            {
-              connections: existingConnections,
-            },
-            { merge: true }
-          ); // Use merge to avoid overwriting other fields
-        }
-      }
-    }
-  } catch (error) {
-    console.error(`Failed to update tutor's connections: ${error.message}`);
-  }
-};
+//
+//=============================================================================
 // Function to sign in a user (Sign-in Page)
 export const login = async (email, password) => {
   try {
@@ -215,8 +173,11 @@ export const signOut = async () => {
     throw new Error(error);
   }
 };
+//=============================================================================
 
 //Functions for fetching information on users
+//=============================================================================
+
 export const getCurrentUser = async () => {
   try {
     const currentUser = FIREBASE_AUTH.currentUser;
@@ -251,6 +212,7 @@ export const getConnectedUsers = async (user) => {
       if (userId) {
         const userDoc = await getDoc(doc(FIREBASE_DB, "User", userId));
         if (userDoc.exists()) {
+          console.log("CONNECTED USER:", userDoc.data());
           return { id: userDoc.id, subject, ...userDoc.data() };
         }
       } else {
@@ -273,7 +235,7 @@ export const fetchRecipientInfo = async (userId) => {
     const userDoc = await getDoc(doc(FIREBASE_DB, "User", userId));
     // Check if the user document exists and return the user data
     if (userDoc.exists()) {
-      // console.log('text', userDoc.data());
+      console.log("text", userDoc.data());
       return userDoc.data(); // Return the data correctly
     } else {
       return null; // Return null if the document does not exist
@@ -359,6 +321,10 @@ export const listenToUsers = (setUsers) => {
   return unsubscribe;
 };
 
+//=============================================================================
+
+// functions to update user information
+//=============================================================================
 
 const removeStudentFromTutor = async (tutorId, subject, studentId) => {
   try {
@@ -367,17 +333,21 @@ const removeStudentFromTutor = async (tutorId, subject, studentId) => {
 
     if (tutorDoc.exists()) {
       const tutorData = tutorDoc.data();
-      const updatedConnections = tutorData.connections.map((conn) => {
-        const [connSubject, connStudentId] = conn.split(" ");
-        // If the connection matches both subject and studentId, keep only the subject
-        return (connSubject === subject && connStudentId === studentId) 
-          ? connSubject 
-          : conn; // Keep the connection as is if it doesn't match
-      }).filter(conn => conn !== undefined); // Ensure no undefined values
+      const updatedConnections = tutorData.connections
+        .map((conn) => {
+          const [connSubject, connStudentId] = conn.split(" ");
+          // If the connection matches both subject and studentId, keep only the subject
+          return connSubject === subject && connStudentId === studentId
+            ? connSubject
+            : conn; // Keep the connection as is if it doesn't match
+        })
+        .filter((conn) => conn !== undefined); // Ensure no undefined values
 
       // Update the tutor's document with the new connections
       await updateDoc(tutorRef, { connections: updatedConnections });
-      console.log(`Updated tutor ${tutorId}: Removed student ID from subject ${subject}`);
+      console.log(
+        `Updated tutor ${tutorId}: Removed student ID from subject ${subject}`
+      );
     } else {
       console.error(`Tutor document not found for ID: ${tutorId}`);
     }
@@ -385,9 +355,6 @@ const removeStudentFromTutor = async (tutorId, subject, studentId) => {
     console.error(`Error updating tutor's connections: ${error.message}`);
   }
 };
-
-
-
 export const updateUser = async (
   user,
   subjects,
@@ -426,19 +393,23 @@ export const updateUser = async (
         // Update the tutor's connections with the new student ID
         await updateTutorsConnections(filteredConnections, user.uid);
 
-        
         if (tutorsToDelete.length > 0) {
-           console.log("Tutors to delete: ",tutorsToDelete);
+          console.log("Tutors to delete: ", tutorsToDelete);
 
-           for (const removedConnection of tutorsToDelete) {
-             const [subjectForDeletion, tutorIdForDeletion] = removedConnection.split(" ");
+          for (const removedConnection of tutorsToDelete) {
+            const [subjectForDeletion, tutorIdForDeletion] =
+              removedConnection.split(" ");
             //  console.log("Subject to delete: ", subjectForDeletion);
             //  console.log("ID to delete: ", tutorIdForDeletion);
-             if (subjectForDeletion && tutorIdForDeletion) {
-               await removeStudentFromTutor(tutorIdForDeletion, subjectForDeletion, user.uid); // Remove connection from tutor
-             }
-           }
-         }
+            if (subjectForDeletion && tutorIdForDeletion) {
+              await removeStudentFromTutor(
+                tutorIdForDeletion,
+                subjectForDeletion,
+                user.uid
+              ); // Remove connection from tutor
+            }
+          }
+        }
 
         return true;
       } catch (error) {
@@ -568,11 +539,57 @@ export const updateUser = async (
     return false; // Return false if there was an error
   }
 };
+// Functions to update user Information
+const updateTutorsConnections = async (connectionsArray, studentId) => {
+  try {
+    for (const connection of connectionsArray) {
+      const [subject, tutorId] = connection.split(" "); // Split subject and tutorId
 
+      // If tutorId exists, update their connections
+      if (tutorId) {
+        const tutorDocRef = doc(FIREBASE_DB, "User", tutorId);
 
+        // Get the current tutor's data
+        const tutorSnap = await getDoc(tutorDocRef);
+        if (tutorSnap.exists()) {
+          const tutorData = tutorSnap.data();
+          const existingConnections = tutorData.connections || [];
 
-const functions = getFunctions(FIREBASE_APP);
+          // Create a new connection with the student ID
+          const newConnection = `${subject} ${studentId}`;
 
+          // Find an existing non-connected entry for this subject
+          const existingSubjectIndex = existingConnections.findIndex(
+            (conn) => conn.startsWith(subject) && conn.split(" ").length === 1
+          );
+
+          if (existingSubjectIndex !== -1) {
+            // Replace the non-connected entry with the new connection
+            existingConnections[existingSubjectIndex] = newConnection;
+          } else {
+            // If there's no non-connected entry for that subject, add the new one
+            existingConnections.push(newConnection);
+          }
+
+          // Update tutor's document in Firestore
+          await setDoc(
+            tutorDocRef,
+            {
+              connections: existingConnections,
+            },
+            { merge: true }
+          ); // Use merge to avoid overwriting other fields
+        }
+      }
+    }
+  } catch (error) {
+    console.error(`Failed to update tutor's connections: ${error.message}`);
+  }
+};
+//=============================================================================
+
+// Delete users
+//=============================================================================
 export const deleteUser = async (userId) => {
   const functions = getFunctions();
   const deleteUserFunc = httpsCallable(functions, "deleteUser");
@@ -585,70 +602,117 @@ export const deleteUser = async (userId) => {
 
     const result = await deleteUserFunc({ userId });
     if (result.data.success) {
-      // console.log(
-      //   `User with ID: ${userId} deleted successfully from authentication.`
-      // );
-
       // Delete the user document from Firestore
       const userDocRef = doc(FIREBASE_DB, "User", userId);
-      await deleteDoc(userDocRef); // Delete the user document
+      const userDoc = await getDoc(userDocRef);
 
-      // Update other users’ connections if necessary
+      let userData;
+      if (userDoc.exists()) {
+        userData = userDoc.data(); // Retrieve the user's data
+        await deleteDoc(userDocRef); // Delete the user document
+      }
+
+      //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      // Deleting All homework
+      let homeworkQuery;
+      if (userData.status === "student") {
+        homeworkQuery = query(
+          collection(FIREBASE_DB, "Homework"),
+          where("studentId", "==", userId)
+        );
+      } else if (userData.status === "tutor") {
+        homeworkQuery = query(
+          collection(FIREBASE_DB, "Homework"),
+          where("tutorId", "==", userId)
+        );
+      }
+
+      if (homeworkQuery) {
+        const homeworkSnapshot = await getDocs(homeworkQuery);
+        const deleteHomeworkPromises = homeworkSnapshot.docs.map(
+          (docSnapshot) =>
+            deleteDoc(doc(FIREBASE_DB, "Homework", docSnapshot.id))
+        );
+        await Promise.all(deleteHomeworkPromises);
+        console.log(`All homework associated with user ${userId} deleted.`);
+      }
+
+      //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      // Delete All conversations
+      const messagesRef = collection(FIREBASE_DB, "Conversations");
+
+      const fromUserQuery = query(messagesRef, where("fromId", "==", userId));
+      const toUserQuery = query(messagesRef, where("toId", "==", userId));
+
+      const [fromUserSnapshot, toUserSnapshot] = await Promise.all([
+        getDocs(fromUserQuery),
+        getDocs(toUserQuery),
+      ]);
+
+      const deletePromises = [
+        ...fromUserSnapshot.docs.map((docSnapshot) =>
+          deleteDoc(doc(FIREBASE_DB, "Conversations", docSnapshot.id))
+        ),
+        ...toUserSnapshot.docs.map((docSnapshot) =>
+          deleteDoc(doc(FIREBASE_DB, "Conversations", docSnapshot.id))
+        ),
+      ];
+
+      await Promise.all(deletePromises);
+      console.log(
+        `All conversations involving user ${userId} have been deleted.`
+      );
+
+      //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      // Delete All sessions
+      const sessions =
+        userData.availability?.map((entry) => {
+          const segments = entry.split(", ");
+          const sessionId = segments[segments.length - 1].split(" ")[0];
+          return sessionId;
+        }) || [];
+
+      await Promise.all(sessions.map((sessionId) => deleteSession(sessionId)));
+
+      console.log(`All sessions involving user ${userId} have been deleted.`);
+
+      //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      // Terminating All CONNECTIONS
+
       const usersQuery = query(
         collection(FIREBASE_DB, "User"),
         orderBy("status")
       );
-
-      // Execute the query
       const querySnapshot = await getDocs(usersQuery);
-      //console.log("QuerySnapshot: ", querySnapshot);
 
-      // Loop through each user to update their connections
       const updatePromises = querySnapshot.docs.map(async (docSnapshot) => {
-        //console.log("USER DATA: ", docSnapshot.data());
-        //console.log("USER ID: ", docSnapshot.id);
-        const userData = docSnapshot.data();
-        const userDocRef = doc(FIREBASE_DB, "User", docSnapshot.id); // Reference for updating each user
-        //console.log("User Document Reference: ", userDocRef.path);
+        const userConnectionsData = docSnapshot.data();
+        const userDocRef = doc(FIREBASE_DB, "User", docSnapshot.id);
 
-        if (userData.connections && Array.isArray(userData.connections)) {
-          // Update connections for each user
-          const updatedConnections = userData.connections.map((connection) => {
-            // Check if the connection string contains a space before splitting
-            if (connection.includes(" ")) {
-              const [subject, connectionUserId] = connection.split(" ");
-              //console.log("Subject: ", subject);
-              //console.log("Connection User ID: ", connectionUserId);
-
-              // Replace connectionUserId with just the subject if it matches userId
-              return connectionUserId === userId ? subject : connection;
+        if (
+          userConnectionsData.connections &&
+          Array.isArray(userConnectionsData.connections)
+        ) {
+          const updatedConnections = userConnectionsData.connections.map(
+            (connection) => {
+              if (connection.includes(" ")) {
+                const [subject, connectionUserId] = connection.split(" ");
+                return connectionUserId === userId ? subject : connection;
+              }
+              return connection;
             }
-            // Return unchanged if no space
-            return connection;
-          });
-
-          // Check if any connections were updated
-          const connectionsChanged = updatedConnections.some(
-            (conn, index) => conn !== userData.connections[index]
           );
 
-          // If there are any changes to the connections, update the user document
+          const connectionsChanged = updatedConnections.some(
+            (conn, index) => conn !== userConnectionsData.connections[index]
+          );
+
           if (connectionsChanged) {
-            // console.log(
-            //   `Updating connections for user ID: ${userId} with data:`,
-            //   updatedConnections
-            // );
             await updateDoc(userDocRef, { connections: updatedConnections });
-            //console.log(`Updated connections for user ID: ${userId}`);
-          } else {
-            //console.log(`No changes to connections for user ID: ${userId}`);
           }
-        } else {
-          //console.log(`No connections found for user ID: ${userId}`);
         }
       });
 
-      // Await all updates to complete
       await Promise.all(updatePromises);
     } else {
       console.error("Failed to delete user:", result.data.error);
@@ -658,14 +722,97 @@ export const deleteUser = async (userId) => {
   }
 };
 
+export const deleteAssociations = async (studentId, tutorId) => {
+  try {
+    // Deleting All homework where studentId and tutorId match
+    const homeworkQuery = query(
+      collection(FIREBASE_DB, "Homework"),
+      where("studentId", "==", studentId),
+      where("tutorId", "==", tutorId)
+    );
+
+    const homeworkSnapshot = await getDocs(homeworkQuery);
+    const deleteHomeworkPromises = homeworkSnapshot.docs.map((docSnapshot) =>
+      deleteDoc(doc(FIREBASE_DB, "Homework", docSnapshot.id))
+    );
+    await Promise.all(deleteHomeworkPromises);
+    console.log(
+      `All homework associated with student ${studentId} and tutor ${tutorId} deleted.`
+    );
+
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    // Deleting All conversations where studentId or tutorId is in fromId or toId
+    const messagesRef = collection(FIREBASE_DB, "Conversations");
+
+    const fromStudentQuery = query(
+      messagesRef,
+      where("fromId", "==", studentId)
+    );
+    const toStudentQuery = query(messagesRef, where("toId", "==", studentId));
+    const fromTutorQuery = query(messagesRef, where("fromId", "==", tutorId));
+    const toTutorQuery = query(messagesRef, where("toId", "==", tutorId));
+
+    const [
+      fromStudentSnapshot,
+      toStudentSnapshot,
+      fromTutorSnapshot,
+      toTutorSnapshot,
+    ] = await Promise.all([
+      getDocs(fromStudentQuery),
+      getDocs(toStudentQuery),
+      getDocs(fromTutorQuery),
+      getDocs(toTutorQuery),
+    ]);
+
+    const deleteConversationPromises = [
+      ...fromStudentSnapshot.docs.map((docSnapshot) =>
+        deleteDoc(doc(FIREBASE_DB, "Conversations", docSnapshot.id))
+      ),
+      ...toStudentSnapshot.docs.map((docSnapshot) =>
+        deleteDoc(doc(FIREBASE_DB, "Conversations", docSnapshot.id))
+      ),
+      ...fromTutorSnapshot.docs.map((docSnapshot) =>
+        deleteDoc(doc(FIREBASE_DB, "Conversations", docSnapshot.id))
+      ),
+      ...toTutorSnapshot.docs.map((docSnapshot) =>
+        deleteDoc(doc(FIREBASE_DB, "Conversations", docSnapshot.id))
+      ),
+    ];
+
+    await Promise.all(deleteConversationPromises);
+    console.log(
+      `All conversations involving student ${studentId} or tutor ${tutorId} have been deleted.`
+    );
+
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    // Deleting All sessions where studentId and tutorId match
+    const sessionQuery = query(
+      collection(FIREBASE_DB, "Session"),
+      where("studentId", "==", studentId),
+      where("tutorId", "==", tutorId)
+    );
+
+    const sessionSnapshot = await getDocs(sessionQuery);
+    const deleteSessionPromises = sessionSnapshot.docs.map(
+      (docSnapshot) => deleteSession(docSnapshot.id) // Using your deleteSession function
+    );
+    await Promise.all(deleteSessionPromises);
+    console.log(
+      `All sessions involving student ${studentId} and tutor ${tutorId} have been deleted.`
+    );
+  } catch (error) {
+    console.error("Error deleting associations:", error.message);
+  }
+};
+
+//=============================================================================
+
+// Sending Functionality
+//=============================================================================
 //Functions for dealing with messaging (Conversation / [query] page)
 export const sendMessage = async (fromId, toId, messageContent) => {
   try {
-    const newMessageRef = doc(
-      FIREBASE_DB,
-      "Conversations",
-      generateMessageId()
-    ); // Generate a new message ID
+    const newMessageRef = doc(FIREBASE_DB, "Conversations", generateId()); // Generate a new message ID
     await setDoc(newMessageRef, {
       fromId: fromId,
       message: messageContent,
@@ -678,7 +825,7 @@ export const sendMessage = async (fromId, toId, messageContent) => {
   }
 };
 // Helper function to generate a unique message ID
-const generateMessageId = () => {
+const generateId = () => {
   return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
 export const fetchMessages = (userId, recipientId, setMessages) => {
@@ -753,6 +900,11 @@ export const fetchMessages = (userId, recipientId, setMessages) => {
   };
 };
 
+//=============================================================================
+
+// Homework functionality
+//=============================================================================
+
 //Functions for dealing with homework (Homework page)
 export const submittingHomework = async (
   studId,
@@ -762,7 +914,7 @@ export const submittingHomework = async (
   dueDate
 ) => {
   try {
-    const newHWRef = doc(FIREBASE_DB, "Homework", generateMessageId()); // Generate a new message ID
+    const newHWRef = doc(FIREBASE_DB, "Homework", generateId()); // Generate a new message ID
     await setDoc(newHWRef, {
       description: description,
       dueDate: dueDate,
@@ -825,3 +977,179 @@ export const deleteHomework = async (itemId) => {
     return false; // Optionally return false to indicate failure
   }
 };
+//=============================================================================
+
+//Schedule Functionality
+////=============================================================================
+
+export const fetchSessions = async (userId, userRole, setGroupedSessions) => {
+  const sessionRef = collection(FIREBASE_DB, "Session");
+  const sessionForId = query(
+    sessionRef,
+    where(userRole === "student" ? "studentId" : "tutorId", "==", userId),
+    orderBy("subject", "asc")
+  );
+
+  return onSnapshot(sessionForId, async (snapshot) => {
+    const sessionPromises = snapshot.docs.map(async (doc) => {
+      const data = doc.data();
+      const oppositeId = userRole === "student" ? data.tutorId : data.studentId;
+      const recipientInfo = await fetchRecipientInfo(oppositeId);
+      return {
+        id: doc.id,
+        recipientName: recipientInfo ? recipientInfo.fullname : "Unknown",
+        ...data,
+      };
+    });
+
+    // Wait for all recipient info to be fetched
+    const sessions = await Promise.all(sessionPromises);
+
+    // Group sessions by `id`
+    const groupedSessions = sessions.reduce((groups, session) => {
+      const { id } = session;
+      if (!groups[id]) {
+        groups[id] = [];
+      }
+      groups[id].push(session);
+      return groups;
+    }, {});
+
+    // Set the grouped sessions
+    console.log("Grouped Sessions by ID:", groupedSessions);
+    setGroupedSessions(groupedSessions);
+  });
+};
+
+export const submittingSession = async (
+  submitId,
+  toId,
+  subject,
+  timeSlot,
+  type,
+  userRole,
+  userAddress
+) => {
+  try {
+    let typeForSubmit;
+
+    if (type === "Online") {
+      typeForSubmit = type;
+    } else {
+      if (userRole === "student") {
+        typeForSubmit = userAddress;
+      } else {
+        const recipientInfo = await fetchRecipientInfo(toId);
+        typeForSubmit = recipientInfo ? recipientInfo.address : undefined;
+      }
+    }
+
+    // Generate a unique session ID
+    const sessionId = generateId();
+    const newSessionRef = doc(FIREBASE_DB, "Session", sessionId);
+
+    // Create the new session document
+    await setDoc(newSessionRef, {
+      studentId: userRole === "student" ? submitId : toId,
+      tutorId: userRole === "tutor" ? submitId : toId,
+      subject: subject,
+      type: typeForSubmit,
+    });
+
+    // Update availability for both the student and the tutor
+    const userIds = [submitId, toId];
+    const updatedAvailabilityPromises = userIds.map(async (userId) => {
+      const userDocRef = doc(FIREBASE_DB, "User", userId);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        // Update each timeslot with the sessionId
+        const updatedAvailability = timeSlot.map((slot) => {
+          return `${slot}, ${sessionId}`;
+        });
+
+        // Combine existing and new availability
+        const newAvailability = [
+          ...userData.availability,
+          ...updatedAvailability,
+        ];
+
+        // Update the user document
+        await setDoc(
+          userDocRef,
+          {
+            availability: newAvailability,
+          },
+          { merge: true }
+        );
+      }
+    });
+
+    // Wait for all availability updates to complete
+    await Promise.all(updatedAvailabilityPromises);
+
+    console.log("Session submitted and availability updated successfully!");
+    
+    // Return the generated session ID
+    return sessionId;
+
+  } catch (error) {
+    console.error("Error submitting session: ", error);
+    throw error; // Re-throw error if needed for handling in calling function
+  }
+};
+
+
+export const deleteSession = async (sessionId) => {
+  try {
+    // Get a reference to the specific document within the Session collection
+    const sessionDocRef = doc(FIREBASE_DB, "Session", sessionId);
+
+    // Fetch the session document to obtain student and tutor IDs
+    const sessionDoc = await getDoc(sessionDocRef);
+
+    if (sessionDoc.exists()) {
+      const sessionData = sessionDoc.data();
+      const userIds = [sessionData.studentId, sessionData.tutorId];
+
+      // Delete the session document
+      await deleteDoc(sessionDocRef);
+
+      // Update availability for both the student and the tutor
+      const updatedAvailabilityPromises = userIds.map(async (userId) => {
+        const userDocRef = doc(FIREBASE_DB, "User", userId);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          // Filter out availability entries containing the session ID
+          const updatedAvailability = userData.availability.filter((slot) => {
+            const parts = slot.split(", "); // Split by ", " to separate day, time, and sessionId
+            return parts.length < 3 || parts[2] !== sessionId; // Keep entries not matching the sessionId
+          });
+
+          // Update the user document with the new availability
+          await setDoc(
+            userDocRef,
+            {
+              availability: updatedAvailability,
+            },
+            { merge: true }
+          ); // Use merge to retain existing data
+        }
+      });
+
+      // Wait for all availability updates to complete
+      await Promise.all(updatedAvailabilityPromises);
+
+      console.log("Session deleted and availability updated successfully!");
+    } else {
+      console.log("Session not found.");
+    }
+  } catch (error) {
+    console.error("Error deleting session: ", error);
+    return false; // Optionally return false to indicate failure
+  }
+};
+//=============================================================================

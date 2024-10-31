@@ -9,6 +9,7 @@ import { getConnectedUsers } from "../../lib/firebase";
 import useFirebase from "../../lib/useFirebase";
 import { Dropdown } from "react-native-element-dropdown";
 
+
 // Utility function to convert subjects in `connections` into { label, value } format
 const getSubjectOptions = (user) => {
   if (!user || !user.connections || user.connections.length === 0) return [];
@@ -33,8 +34,10 @@ const Home = ({ navigation }) => {
   const { user } = useGlobalContext();
   const { data: userInfo, refetch } = useFirebase(() => getConnectedUsers(user));
 
+
   const [refreshing, setRefreshing] = useState(false);
   const [subject, setSubject] = useState(getSubjectOptions(user)[0]?.value || ""); // Default to first subject, if available
+
 
   // Get subject options using the utility function
   const subjectOptions = getSubjectOptions(user);
