@@ -35,23 +35,23 @@ const Homework = ({ navigation }) => {
   const getStudentOptions = (users) => {
     // Check if users is an array and has at least one user
     if (!Array.isArray(users) || users.length === 0) return [];
-  
+
     // Initialize an array to hold all student options
     let options = [];
-  
+
     users.forEach((user) => {
       if (user !== null) {
         // Push the formatted option for valid users into the options array
         options.push({
           label: `${user.fullname} (${user.subject})`, // Format label to include subject
-          value: user.id, // Use user ID as value
+          value: `${user.subject} ${user.id}`, // Use user ID as value
         });
       }
     });
-  
+
     return options;
   };
-  
+
   // Usage example
   const studentOptions = getStudentOptions(userInfo); // Pass the entire array
   // console.log(studentOptions);
@@ -59,11 +59,10 @@ const Homework = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
 
   const [student, setStudent] = useState("");
-
+  const [studentId, setStudentId] = useState("");
+  const [studentSubject, setStudentSubject] = useState("");
   const [date, setDate] = useState(dayjs());
-
   const [description, setDescription] = useState("");
-
   const [groupedHomework, setGroupedHomework] = useState({});
 
   useEffect(() => {
@@ -81,39 +80,20 @@ const Homework = ({ navigation }) => {
       Alert.alert("Please Input all fields!");
       return;
     }
-  
-    // Find the selected student
-    const selectedStudent = userInfo.find((s) => s.id === student.value);
-  
-    // Check if the selected student exists
-    if (!selectedStudent) {
-      Alert.alert("Selected student not found.");
-      return;
-    }
-  
-    // Get the subject of the selected student
-    const matchingSubject = selectedStudent.subject;
-  
-    // Check if a matching subject exists
-    if (!matchingSubject) {
-      console.log("No matching subjects.");
-      Alert.alert("No matching subjects found for the selected student.");
-      return;
-    }
-  
+
     // Format the date using dayjs
     const dayjsDate = dayjs(date);
     const formattedDate = dayjsDate.format("DD/MM HH:mm");
-  
+
     // Submit the homework
     submittingHomework(
-      student.value,
+      studentId,
       user.uid,
-      matchingSubject,
+      studentSubject,
       description,
       formattedDate
     );
-  
+
     // Reset form fields and close modal
     setModalVisible(false);
     setDate(dayjs()); // Reset to current date/time
@@ -140,7 +120,13 @@ const Homework = ({ navigation }) => {
               <View className="w-[300px] h-[30px] flex-row justify-end items-center">
                 <TouchableOpacity
                   style={styles.shadow}
-                  onPress={() => setModalVisible(!modalVisible)}
+                  onPress={() => {
+                    setModalVisible(!modalVisible);
+                    setStudentId("");
+                    setStudentSubject("");
+                    setStudent("");
+                    setDescription("");
+                  }}
                 >
                   <Text style={styles.textStyle} className="text-lg">
                     X
@@ -163,6 +149,9 @@ const Homework = ({ navigation }) => {
                 value={student}
                 onChange={(item) => {
                   setStudent(item);
+                  const [subjectValue, userId] = item.value.split(" ");
+                  setStudentId(userId);
+                  setStudentSubject(subjectValue);
                 }}
               />
               <FormField
@@ -181,7 +170,13 @@ const Homework = ({ navigation }) => {
               <TouchableOpacity
                 className="bg-primary p-3 border-none rounded-xl mt-10"
                 style={styles.shadow}
-                onPress={() => submitHomework()}
+                onPress={() => {
+                  submitHomework();
+                  setStudentId("");
+                  setStudentSubject("");
+                  setStudent("");
+                  setDescription("");
+                }}
               >
                 <Text style={styles.textStyle}>Submit</Text>
               </TouchableOpacity>
@@ -197,7 +192,9 @@ const Homework = ({ navigation }) => {
             <CustomButton
               title="Add +"
               containerStyles="w-20 h-10 justify-center items-center"
-              handlePress={() => setModalVisible(!modalVisible)}
+              handlePress={() => {
+                setModalVisible(!modalVisible);
+              }}
             />
           )}
           <MenuButton handlePress={() => navigation.toggleDrawer()} />
