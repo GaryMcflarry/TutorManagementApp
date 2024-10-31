@@ -20,14 +20,13 @@ import { useGlobalContext } from "../../context/GlobalProvider";
 import {
   getConnectedUsers,
   submittingSession,
-  deleteSession,
+  fetchSessions,
 } from "../../lib/firebase";
 import Icon from "react-native-vector-icons/Ionicons";
 import { Dropdown } from "react-native-element-dropdown";
 import useFirebase from "../../lib/useFirebase";
 
 const TimeTable = ({ navigation }) => {
-
   const days = [
     "Monday",
     "Tuesday",
@@ -37,21 +36,19 @@ const TimeTable = ({ navigation }) => {
     "Saturday",
   ];
 
-
-  const { user } = useGlobalContext();
+  const { user, setUser } = useGlobalContext();
 
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
-
+  const [groupedSession, setGroupedSession] = useState({});
   const [subject, setSubject] = useState("");
   const [timeSlot, setTimeslot] = useState([]);
   const [type, setType] = useState("");
 
   const timeRanges = useMemo(() => {
-
     const startHour = 8;
     const endHour = 16;
     const ranges = [];
@@ -62,8 +59,19 @@ const TimeTable = ({ navigation }) => {
     }
     setLoading(false);
     return ranges;
-
   }, []);
+
+  useEffect(() => {
+    // Call fetchSessions and store the unsubscribe function
+    const unsubscribe = fetchSessions(user.uid, user.status, setGroupedSession);
+    console.log("Current logged in user: ", user);
+    // Cleanup function to unsubscribe
+    return () => {
+      if (typeof unsubscribe === "function") {
+        unsubscribe(); // Call unsubscribe if it's a function
+      }
+    };
+  }, [user.uid, user.availability]);
 
   const { data: userInfo, refetch } = useFirebase(() =>
     getConnectedUsers(user)
@@ -94,16 +102,21 @@ const TimeTable = ({ navigation }) => {
 
   const submitSession = async () => {
     try {
+      let createdSessionId;
       if (
-        (selectedUserId === "" || timeSlot.length === 0 || subject === "",
-        type === "")
+        selectedUserId === "" ||
+        timeSlot.length === 0 ||
+        subject === "" ||
+        type === ""
       ) {
         Alert.alert("Please fill out all fields!");
         return;
       }
 
+      setLoading(true);
+
       if (user.status === "student") {
-        await submittingSession(
+        createdSessionId = await submittingSession(
           user.uid,
           selectedUserId,
           subject,
@@ -113,7 +126,7 @@ const TimeTable = ({ navigation }) => {
           user.address
         );
       } else {
-        await submittingSession(
+        createdSessionId = await submittingSession(
           user.uid,
           selectedUserId,
           subject,
@@ -124,21 +137,65 @@ const TimeTable = ({ navigation }) => {
         );
       }
 
-      Alert.alert("Session was added");
-      // Reset fields only if submission is successful
-      setModalVisible(false);
-      setTimeslot([]);
-      setSelectedUserId("");
-      setSubject("");
-      setType("");
-      
+      let newAvailabilities = []; // Array to hold new availability entries
+
+      timeSlot.forEach((slot) => {
+        const newAvailability = `${slot}, ${createdSessionId}`;
+        console.log("NEW AVAIL: ", newAvailability);
+        newAvailabilities.push(newAvailability); // Add each new slot separately
+      });
+
+      // Merge new availabilities with existing ones
+      const updatedAvailability = [...user.availability, ...newAvailabilities];
+
+      // Update the user state in the context
+      setUser({
+        ...user,
+        availability: updatedAvailability,
+      });
+
+      // Delay setting loading to false by 500 ms after updating the user
+      setTimeout(() => {
+        Alert.alert("Session was added");
+        setLoading(false), 500;
+        setModalVisible(false);
+        setTimeslot([]);
+        setSelectedUser("");
+        setSelectedUserId("");
+        setSubject("");
+        setType("");
+      });
     } catch (error) {
       console.error("Error submitting session:", error);
       Alert.alert(
         "An error occurred while submitting the session. Please try again."
       );
+      setLoading(false); // Ensure loading is turned off if there's an error
     }
   };
+
+  async function updateUserAvailability(userId, timeSlot) {
+    // Assuming you are using Firestore as your database
+    const userRef = firestore.collection("users").doc(userId);
+
+    // Get the current user's data
+    const userDoc = await userRef.get();
+    const userData = userDoc.data();
+
+    // Check if availability exists and add the new time slot
+    const updatedAvailability = userData.availability || [];
+
+    // Optionally prevent duplicates
+    if (!updatedAvailability.includes(timeSlot)) {
+      updatedAvailability.push(timeSlot);
+    }
+
+    // Update the user's document with the new availability
+    await userRef.update({ availability: updatedAvailability });
+
+    // Update the user state in the context
+    setUser({ ...userData, availability: updatedAvailability });
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -342,40 +399,45 @@ const TimeTable = ({ navigation }) => {
                 />
               </View>
 
-              <FlatList
-                data={timeRanges}
-                keyExtractor={(item) => item}
-                renderItem={({ item }) => {
-                  const matchedAvailability = user.availability.find(
-                    (avail) => {
-                      const [availabilityDay, availabilityTime] =
-                        avail.split(", ");
-                      return (
-                        availabilityDay === day && availabilityTime === item
-                      );
-                    }
-                  );
-                  const sessionId = matchedAvailability
-                    ? matchedAvailability.split(", ")[2]
-                    : null;
-                  return (
-                    <TimeTableCard
-                      time={item}
-                      day={day}
-                      sessionId={sessionId}
-                      userRole={user.status}
-                    />
-                  );
-                }}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.flatListContent}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={refreshing}
-                    onRefresh={onRefresh}
-                  />
-                }
-              />
+              {loading ? (
+                <ActivityIndicator size="large" color="#0000ff" /> // Show a loader or placeholder
+              ) : (
+                <FlatList
+                  data={timeRanges}
+                  keyExtractor={(item) => item}
+                  renderItem={({ item }) => {
+                    const matchedAvailability = user.availability.find(
+                      (avail) => {
+                        const [availabilityDay, availabilityTime] =
+                          avail.split(", ");
+                        return (
+                          availabilityDay === day && availabilityTime === item
+                        );
+                      }
+                    );
+
+                    const sessionId = matchedAvailability
+                      ? matchedAvailability.split(", ")[2]
+                      : null;
+
+                    // Find the matching session in groupedSessions if a sessionId exists
+                    const sessionDetails =
+                      sessionId && groupedSession[sessionId]
+                        ? groupedSession[sessionId][0] // Assuming there's only one session per ID
+                        : null;
+
+                    // Pass the session details to the TimeTableCard component
+                    return (
+                      <TimeTableCard
+                        time={item}
+                        sessionId={sessionId}
+                        sessionDetails={sessionDetails}
+                        day={day} // Pass the entire session details to the card
+                      />
+                    );
+                  }}
+                />
+              )}
             </View>
           ))}
         </PagerView>

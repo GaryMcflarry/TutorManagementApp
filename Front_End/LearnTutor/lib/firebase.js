@@ -320,6 +320,7 @@ export const listenToUsers = (setUsers) => {
   // Return the unsubscribe function to stop listening when needed
   return unsubscribe;
 };
+
 //=============================================================================
 
 // functions to update user information
@@ -792,8 +793,8 @@ export const deleteAssociations = async (studentId, tutorId) => {
     );
 
     const sessionSnapshot = await getDocs(sessionQuery);
-    const deleteSessionPromises = sessionSnapshot.docs.map((docSnapshot) =>
-      deleteSession(docSnapshot.id) // Using your deleteSession function
+    const deleteSessionPromises = sessionSnapshot.docs.map(
+      (docSnapshot) => deleteSession(docSnapshot.id) // Using your deleteSession function
     );
     await Promise.all(deleteSessionPromises);
     console.log(
@@ -981,44 +982,43 @@ export const deleteHomework = async (itemId) => {
 //Schedule Functionality
 ////=============================================================================
 
-//Including state for the listerner and dynamic rendering
-export const listenToSessionDetails = (
-  sessionID,
-  userRole,
-  setSessionDetails
-) => {
-  const sessionRef = doc(FIREBASE_DB, "Session", sessionID); // Reference to the session document
-
-  // Set up a listener for real-time updates
-  return onSnapshot(
+export const fetchSessions = async (userId, userRole, setGroupedSessions) => {
+  const sessionRef = collection(FIREBASE_DB, "Session");
+  const sessionForId = query(
     sessionRef,
-    async (sessionDoc) => {
-      if (sessionDoc.exists()) {
-        const sessionData = sessionDoc.data(); // Get the session data
-        console.log("Session Data: ", sessionData);
-
-        // Determine the opposite ID based on user role
-        const recipientId =
-          userRole === "student" ? sessionData.tutorId : sessionData.studentId;
-
-        // Fetch recipient info (tutor or student)
-        const recipientInfo = await fetchRecipientInfo(recipientId);
-        console.log("Recipient info: ", recipientInfo);
-
-        // Update session details with recipient info
-        setSessionDetails({
-          ...sessionData,
-          recipientInfo, // Add recipient info to session data
-        });
-      } else {
-        setSessionDetails(null); // Set session details to null if the document doesn't exist
-      }
-    },
-    (error) => {
-      console.error("Error listening to session details: ", error);
-      setSessionDetails(null); // Set session details to null in case of error
-    }
+    where(userRole === "student" ? "studentId" : "tutorId", "==", userId),
+    orderBy("subject", "asc")
   );
+
+  return onSnapshot(sessionForId, async (snapshot) => {
+    const sessionPromises = snapshot.docs.map(async (doc) => {
+      const data = doc.data();
+      const oppositeId = userRole === "student" ? data.tutorId : data.studentId;
+      const recipientInfo = await fetchRecipientInfo(oppositeId);
+      return {
+        id: doc.id,
+        recipientName: recipientInfo ? recipientInfo.fullname : "Unknown",
+        ...data,
+      };
+    });
+
+    // Wait for all recipient info to be fetched
+    const sessions = await Promise.all(sessionPromises);
+
+    // Group sessions by `id`
+    const groupedSessions = sessions.reduce((groups, session) => {
+      const { id } = session;
+      if (!groups[id]) {
+        groups[id] = [];
+      }
+      groups[id].push(session);
+      return groups;
+    }, {});
+
+    // Set the grouped sessions
+    console.log("Grouped Sessions by ID:", groupedSessions);
+    setGroupedSessions(groupedSessions);
+  });
 };
 
 export const submittingSession = async (
@@ -1031,8 +1031,6 @@ export const submittingSession = async (
   userAddress
 ) => {
   try {
-    //console.log("SUBMITId: ", submitId);
-    //console.log("TOID: ", toId)
     let typeForSubmit;
 
     if (type === "Online") {
@@ -1041,42 +1039,41 @@ export const submittingSession = async (
       if (userRole === "student") {
         typeForSubmit = userAddress;
       } else {
-        // Ensure fetchRecipientInfo is awaited
         const recipientInfo = await fetchRecipientInfo(toId);
-        typeForSubmit = recipientInfo ? recipientInfo.address : undefined; // Handle case where recipient info might not exist
+        typeForSubmit = recipientInfo ? recipientInfo.address : undefined;
       }
     }
 
+    // Generate a unique session ID
     const sessionId = generateId();
-    const newSessionRef = doc(FIREBASE_DB, "Session", sessionId); // Create a reference for the new session
+    const newSessionRef = doc(FIREBASE_DB, "Session", sessionId);
 
     // Create the new session document
     await setDoc(newSessionRef, {
-      studentId: userRole === "student" ? submitId : toId, // Assign studentId based on userRole
-      tutorId: userRole === "tutor" ? submitId : toId, // Assign tutorId based on userRole
-      subject: subject, // The subject for the session
-      type: typeForSubmit, // The type of session (online/in-person)
+      studentId: userRole === "student" ? submitId : toId,
+      tutorId: userRole === "tutor" ? submitId : toId,
+      subject: subject,
+      type: typeForSubmit,
     });
 
     // Update availability for both the student and the tutor
-    const userIds = [submitId, toId]; // Store the IDs of the involved users
+    const userIds = [submitId, toId];
     const updatedAvailabilityPromises = userIds.map(async (userId) => {
-      const userDocRef = doc(FIREBASE_DB, "User", userId); // Reference to the user document
-      const userDoc = await getDoc(userDocRef); // Fetch the user document
+      const userDocRef = doc(FIREBASE_DB, "User", userId);
+      const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        //console.log("USER DATA!: ", userData)
+        // Update each timeslot with the sessionId
         const updatedAvailability = timeSlot.map((slot) => {
-          //console.log("SLOT: ", `${slot}, ${sessionId}`)
-          return `${slot}, ${sessionId}`; // Add sessionId to each timeslot entry
+          return `${slot}, ${sessionId}`;
         });
 
-        // Update the availability array
+        // Combine existing and new availability
         const newAvailability = [
           ...userData.availability,
           ...updatedAvailability,
-        ]; // Combine existing and new availability
+        ];
 
         // Update the user document
         await setDoc(
@@ -1085,7 +1082,7 @@ export const submittingSession = async (
             availability: newAvailability,
           },
           { merge: true }
-        ); // Use merge to retain existing data
+        );
       }
     });
 
@@ -1093,10 +1090,16 @@ export const submittingSession = async (
     await Promise.all(updatedAvailabilityPromises);
 
     console.log("Session submitted and availability updated successfully!");
+    
+    // Return the generated session ID
+    return sessionId;
+
   } catch (error) {
     console.error("Error submitting session: ", error);
+    throw error; // Re-throw error if needed for handling in calling function
   }
 };
+
 
 export const deleteSession = async (sessionId) => {
   try {

@@ -2,39 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Card, Text } from "@rneui/themed";
 import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { listenToSessionDetails, deleteSession } from "../../lib/firebase";
+import { useGlobalContext } from "../../context/GlobalProvider";
 
-const TimeTableCard = ({ sessionId, time, userRole, day }) => {
-  
-  const [sessionDetails, setSessionDetails] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let unsubscribe;
-
-    const getSessionDetails = () => {
-      if (sessionId) {
-        unsubscribe = listenToSessionDetails(
-          sessionId,
-          userRole,
-          setSessionDetails
-        );
-      }
-      setLoading(false);
-    };
-
-    getSessionDetails();
-
-    // Cleanup listener on component unmount
-    return () => {
-      if (unsubscribe) {
-        unsubscribe(); // Unsubscribe from listener to avoid memory leaks
-      }
-    };
-  }, [sessionId, userRole]);
-
-  const subject = sessionDetails?.subject;
-  const fullname = sessionDetails?.recipientInfo.fullname;
-  const sessionType = sessionDetails?.type;
+const TimeTableCard = ({ sessionId, time, sessionDetails, day }) => {
+  const { user, setUser } = useGlobalContext();
 
   // Dynamic background colors based on subject
   const backgroundColors = {
@@ -45,24 +16,21 @@ const TimeTableCard = ({ sessionId, time, userRole, day }) => {
     default: "#D9D9D9", // Fallback color
   };
 
-  const getBackgroundColor = () =>
-    backgroundColors[subject] || backgroundColors.default;
+  // Function to get the background color based on session details
+  const getBackgroundColor = () => {
+    if (sessionDetails && sessionDetails.subject) {
+      return (
+        backgroundColors[sessionDetails.subject] || backgroundColors.default
+      );
+    }
+    return backgroundColors.default; // Return default if sessionDetails is null or subject is missing
+  };
 
-  if (loading) {
-    return (
-      <View
-        style={{
-          justifyContent: "center",
-          alignItems: "center",
-          marginVertical: 10,
-        }}
-      >
-        <Text style={styles.fullname}>Loading...</Text>
-      </View>
-    );
-  }
+  // console.log("Card ID :", sessionId);
+  // console.log("Card Time :", time);
+  // console.log("Card Details :", sessionDetails);
 
-  if (!sessionId) {
+  if (!sessionId || !sessionDetails) {
     return (
       <Card containerStyle={[styles.card, styles.noSession]}>
         <View style={styles.header}>
@@ -92,6 +60,25 @@ const TimeTableCard = ({ sessionId, time, userRole, day }) => {
                 try {
                   // Call the deleteSession function and wait for it to complete
                   await deleteSession(sessionId);
+
+                  if (
+                    user.availability.includes(`${day}, ${time}, ${sessionId}`)
+                  ) {
+                   
+
+                    // Filter out any existing entries that match this day and time
+                    const filteredAvailability = user.availability.filter(
+                      (slot) => !slot.includes(`${sessionId}`)
+                    );
+
+                    // Update the user state in the context
+                    setUser({
+                      ...user, // Keep all other user details
+                      availability: filteredAvailability, // Update with the new availability array
+                    });
+
+                    // console.log("Updated Availability:", updatedAvailability);
+                  }
                   // Show success alert after deletion
                   Alert.alert("Success", "Session was deleted successfully!");
                 } catch (error) {
@@ -115,11 +102,11 @@ const TimeTableCard = ({ sessionId, time, userRole, day }) => {
       >
         <View style={styles.header}>
           <Text style={styles.time}>{time}</Text>
-          <Text style={styles.subject}>{subject}</Text>
+          <Text style={styles.subject}>{sessionDetails.subject}</Text>
         </View>
         <View style={{ justifyContent: "center", alignItems: "center" }}>
-          <Text style={styles.fullname}>{fullname}</Text>
-          <Text style={styles.fullname}>{sessionType}</Text>
+          <Text style={styles.fullname}>{sessionDetails.recipientName}</Text>
+          <Text style={styles.fullname}>{sessionDetails.type}</Text>
         </View>
       </Card>
     </TouchableOpacity>
