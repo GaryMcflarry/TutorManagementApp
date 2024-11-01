@@ -1020,7 +1020,6 @@ export const fetchSessions = async (userId, userRole, setGroupedSessions) => {
     setGroupedSessions(groupedSessions);
   });
 };
-
 export const submittingSession = async (
   submitId,
   toId,
@@ -1099,8 +1098,6 @@ export const submittingSession = async (
     throw error; // Re-throw error if needed for handling in calling function
   }
 };
-
-
 export const deleteSession = async (sessionId) => {
   try {
     // Get a reference to the specific document within the Session collection

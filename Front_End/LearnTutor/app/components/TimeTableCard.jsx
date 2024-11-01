@@ -12,7 +12,7 @@ const TimeTableCard = ({ sessionId, time, sessionDetails, day }) => {
     English: "#822323",
     Science: "#2B572C",
     Mathematics: "#B5C00B",
-    Geography: "#B5C00B",
+    Geography: "#42C0C6",
     default: "#D9D9D9", // Fallback color
   };
 
