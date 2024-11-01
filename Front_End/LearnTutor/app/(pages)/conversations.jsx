@@ -26,13 +26,19 @@ const Conversations = ({ navigation }) => {
   const fetchContacts = async () => {
     try {
       const usersData = await getConnectedUsers(user); // Fetch users from Firebase
-      setConnectedUsers(usersData);
-      setFilteredUsers(usersData); // Initialize with full list
-      // console.log("Connected Users: ", filteredUsers); // Proper logging after fetch
+      
+      // Remove duplicates by `id`
+      const uniqueUsers = Array.from(
+        new Map(usersData.map((user) => [user.id, user])).values()
+      );
+
+      setConnectedUsers(uniqueUsers);
+      setFilteredUsers(uniqueUsers); // Initialize with full list
     } catch (error) {
       console.error("Error fetching connected users: ", error);
     }
   };
+
   fetchContacts();
 }, [user]); // Fetch users on component mount or when `user` changes
 
