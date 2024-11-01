@@ -11,6 +11,7 @@ import { getConnectedUsers } from "../../lib/firebase";
 import { images } from "../../constants";
 
 const Conversations = ({ navigation }) => {
+  
   const { user } = useGlobalContext(); // Get the logged-in user
   const [searchQuery, setSearchQuery] = useState(""); // For search input
   const [connectedUsers, setConnectedUsers] = useState([]); // List of connected users
@@ -22,6 +23,7 @@ const Conversations = ({ navigation }) => {
   //const { data: usersData, refetch } = useFirebase(() => getContacts(user));
 
  // Fetch connected users (tutors or students)
+
  useEffect(() => {
   const fetchContacts = async () => {
     try {

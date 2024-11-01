@@ -269,16 +269,27 @@ const Admin = () => {
         editedUser.status === "student" &&
         editedUser.connections
       ) {
-        const tutorInfoPromises = editedUser.connections.map(
-          async (connection) => {
-            const [subject, tutorId] = connection.split(" ");
-            const info = await fetchRecipientInfo(tutorId);
-            return { subject, tutorId, fullname: info.fullname };
+        const tutorInfoPromises = editedUser.connections
+        .map((connection) => {
+          const [subject, tutorId] = connection.split(" ");
+          // Only return if tutorId is valid (not null, undefined, or "NoTutors")
+          if (tutorId && tutorId !== "NoTutors") {
+            return fetchRecipientInfo(tutorId).then((info) => ({
+              subject,
+              tutorId,
+              fullname: info.fullname,
+            }));
           }
-        );
+          // Return null for invalid tutorId to filter them out later
+          return subject;
+        })
+        .filter(Boolean); // Remove any null entries
+      
+      // Now, tutorInfoPromises contains only valid tutorId and fullname pairs
 
         // Resolve all promises and set the array of tutor data
         const tutorsInfo = await Promise.all(tutorInfoPromises);
+        //console.log("TUTOR INFO: ", tutorsInfo);
         setTutorData(tutorsInfo);
         // console.log("TUTOR DATA: ", tutorsInfo); // Log tutorsInfo directly
       }

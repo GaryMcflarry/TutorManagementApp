@@ -548,11 +548,12 @@ const updateTutorsConnections = async (connectionsArray, studentId) => {
       // If tutorId exists, update their connections
       if (tutorId) {
         const tutorDocRef = doc(FIREBASE_DB, "User", tutorId);
-
+        
         // Get the current tutor's data
         const tutorSnap = await getDoc(tutorDocRef);
         if (tutorSnap.exists()) {
           const tutorData = tutorSnap.data();
+          //console.log("AVAIALABLE tutor: ", tutorData);
           const existingConnections = tutorData.connections || [];
 
           // Create a new connection with the student ID
@@ -572,12 +573,11 @@ const updateTutorsConnections = async (connectionsArray, studentId) => {
           }
 
           // Update tutor's document in Firestore
-          await setDoc(
+          await updateDoc(
             tutorDocRef,
             {
               connections: existingConnections,
             },
-            { merge: true }
           ); // Use merge to avoid overwriting other fields
         }
       }
