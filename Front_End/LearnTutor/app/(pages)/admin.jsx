@@ -18,7 +18,7 @@ import {
   updateUser,
   getAvailableTutors,
   fetchRecipientInfo,
-  deleteAssociations
+  deleteAssociations,
 } from "../../lib/firebase";
 import { ActivityIndicator, KeyboardAvoidingView } from "react-native";
 import FormField from "../components/FormField";
@@ -71,8 +71,9 @@ const Admin = () => {
           chatLink,
           grade,
           address,
-          null,
-          null
+          [],
+          [],
+          []
         );
 
         if (response) {
@@ -95,6 +96,7 @@ const Admin = () => {
         chatLink,
         grade,
         address,
+        editedUser.connections,
         connectionsArray,
         tutorsToDelete
       );
@@ -269,16 +271,27 @@ const Admin = () => {
         editedUser.status === "student" &&
         editedUser.connections
       ) {
-        const tutorInfoPromises = editedUser.connections.map(
-          async (connection) => {
+        const tutorInfoPromises = editedUser.connections
+          .map((connection) => {
             const [subject, tutorId] = connection.split(" ");
-            const info = await fetchRecipientInfo(tutorId);
-            return { subject, tutorId, fullname: info.fullname };
-          }
-        );
+            // Only return if tutorId is valid (not null, undefined, or "NoTutors")
+            if (tutorId && tutorId !== "NoTutors") {
+              return fetchRecipientInfo(tutorId).then((info) => ({
+                subject,
+                tutorId,
+                fullname: info.fullname,
+              }));
+            }
+            // Return null for invalid tutorId to filter them out later
+            return subject;
+          })
+          .filter(Boolean); // Remove any null entries
+
+        // Now, tutorInfoPromises contains only valid tutorId and fullname pairs
 
         // Resolve all promises and set the array of tutor data
         const tutorsInfo = await Promise.all(tutorInfoPromises);
+        //console.log("TUTOR INFO: ", tutorsInfo);
         setTutorData(tutorsInfo);
         // console.log("TUTOR DATA: ", tutorsInfo); // Log tutorsInfo directly
       }
@@ -342,15 +355,15 @@ const Admin = () => {
           text: "OK",
           onPress: async () => {
             setLoading(true);
-  
+
             let tutorId = null;
-  
+
             setEditedUser((prevUser) => {
               // Find the connection to remove
               const removedConnection = prevUser.connections.find((conn) =>
                 conn.includes(subject)
               );
-  
+
               if (removedConnection && removedConnection.includes(" ")) {
                 [, tutorId] = removedConnection.split(" ");
                 setTutorsToDelete((prevTutors) => [
@@ -358,7 +371,7 @@ const Admin = () => {
                   `${subject} ${tutorId}`, // Store the subject with tutor ID
                 ]);
               }
-  
+
               // Return the updated connections without the removed subject connection
               return {
                 ...prevUser,
@@ -367,11 +380,11 @@ const Admin = () => {
                 ),
               };
             });
-  
+
             if (tutorId) {
               await deleteAssociations(editedUser.uid, tutorId);
             }
-  
+
             setLoading(false);
           },
         },
@@ -443,26 +456,23 @@ const Admin = () => {
                 ?.tutorId || "No Tutors"
             } // Track selected tutor ID
             onChange={(item) => {
-              const subject = subjectObj.subject; // Get the subject name
-              const tutorId = item.value; // Get the selected tutor ID
+              const subject = subjectObj.subject;
+              const tutorId = item.value;
 
-              // Update the tutors state, ensuring no duplicate entries for the same subject
-              setSelectedTutors((prevTutors) => {
-                const existingIndex = prevTutors.findIndex(
-                  (t) => t.subject === subject
-                );
-                if (existingIndex !== -1) {
-                  // Replace the existing tutor
-                  const updatedTutors = [...prevTutors];
-                  updatedTutors[existingIndex].tutorId = tutorId;
-                  return updatedTutors;
-                }
-                // Add new subject-tutor pair
-                return [...prevTutors, { subject, tutorId }];
-              });
+              // Start with a copy of the current state
+              let updatedTutors = selectedTutors;
 
-              // Optionally, you could set the selected ID back to the subject object
-              subjectObj.selectedTutorId = tutorId; // This line is optional as it might not re-render
+              // Remove any existing entry for this subject
+              updatedTutors = updatedTutors.filter(
+                (t) => t.subject !== subject
+              );
+
+              // Add the new or updated entry
+              updatedTutors.push({ subject, tutorId });
+
+              setSelectedTutors(updatedTutors);
+
+              console.log("Updated Selected Tutors:", selectedTutors);
             }}
           />
         )}

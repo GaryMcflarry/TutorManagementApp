@@ -11,6 +11,7 @@ import { getConnectedUsers } from "../../lib/firebase";
 import { images } from "../../constants";
 
 const Conversations = ({ navigation }) => {
+  
   const { user } = useGlobalContext(); // Get the logged-in user
   const [searchQuery, setSearchQuery] = useState(""); // For search input
   const [connectedUsers, setConnectedUsers] = useState([]); // List of connected users
@@ -22,17 +23,24 @@ const Conversations = ({ navigation }) => {
   //const { data: usersData, refetch } = useFirebase(() => getContacts(user));
 
  // Fetch connected users (tutors or students)
+
  useEffect(() => {
   const fetchContacts = async () => {
     try {
       const usersData = await getConnectedUsers(user); // Fetch users from Firebase
-      setConnectedUsers(usersData);
-      setFilteredUsers(usersData); // Initialize with full list
-      // console.log("Connected Users: ", filteredUsers); // Proper logging after fetch
+      
+      // Remove duplicates by `id`
+      const uniqueUsers = Array.from(
+        new Map(usersData.map((user) => [user.id, user])).values()
+      );
+
+      setConnectedUsers(uniqueUsers);
+      setFilteredUsers(uniqueUsers); // Initialize with full list
     } catch (error) {
       console.error("Error fetching connected users: ", error);
     }
   };
+
   fetchContacts();
 }, [user]); // Fetch users on component mount or when `user` changes
 

@@ -364,6 +364,7 @@ export const updateUser = async (
   chatLink,
   grade,
   address,
+  prevConnections,
   connectionsArray,
   tutorsToDelete
 ) => {
@@ -381,10 +382,14 @@ export const updateUser = async (
 
         console.log("Filtered Connections Array: ", filteredConnections);
 
+        const combinedConnections = [...prevConnections, ...filteredConnections];
+        console.log("Previous connections: ", prevConnections);
+        console.log("Combined Connections Array (New connections): ", combinedConnections);
+
         // Update the user record in Firebase, including additional fields
         const userRef = doc(FIREBASE_DB, "User", user.uid); // Correctly reference the document
         await updateDoc(userRef, {
-          connections: filteredConnections,
+          connections: combinedConnections,
           fullname: fullname,
           grade: grade,
           address: address,
@@ -548,11 +553,12 @@ const updateTutorsConnections = async (connectionsArray, studentId) => {
       // If tutorId exists, update their connections
       if (tutorId) {
         const tutorDocRef = doc(FIREBASE_DB, "User", tutorId);
-
+        
         // Get the current tutor's data
         const tutorSnap = await getDoc(tutorDocRef);
         if (tutorSnap.exists()) {
           const tutorData = tutorSnap.data();
+          //console.log("AVAIALABLE tutor: ", tutorData);
           const existingConnections = tutorData.connections || [];
 
           // Create a new connection with the student ID
@@ -572,12 +578,11 @@ const updateTutorsConnections = async (connectionsArray, studentId) => {
           }
 
           // Update tutor's document in Firestore
-          await setDoc(
+          await updateDoc(
             tutorDocRef,
             {
               connections: existingConnections,
             },
-            { merge: true }
           ); // Use merge to avoid overwriting other fields
         }
       }
@@ -1020,7 +1025,6 @@ export const fetchSessions = async (userId, userRole, setGroupedSessions) => {
     setGroupedSessions(groupedSessions);
   });
 };
-
 export const submittingSession = async (
   submitId,
   toId,
@@ -1099,8 +1103,6 @@ export const submittingSession = async (
     throw error; // Re-throw error if needed for handling in calling function
   }
 };
-
-
 export const deleteSession = async (sessionId) => {
   try {
     // Get a reference to the specific document within the Session collection

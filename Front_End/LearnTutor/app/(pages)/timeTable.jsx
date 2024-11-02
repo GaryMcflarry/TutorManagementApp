@@ -64,7 +64,7 @@ const TimeTable = ({ navigation }) => {
   useEffect(() => {
     // Call fetchSessions and store the unsubscribe function
     const unsubscribe = fetchSessions(user.uid, user.status, setGroupedSession);
-    console.log("Current logged in user: ", user);
+    //console.log("Current logged in user: ", user);
     // Cleanup function to unsubscribe
     return () => {
       if (typeof unsubscribe === "function") {
@@ -77,11 +77,13 @@ const TimeTable = ({ navigation }) => {
     getConnectedUsers(user)
   );
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
-  };
+  console.log("USER INFO: ", userInfo);
+
+  // const onRefresh = async () => {
+  //   setRefreshing(true);
+  //   await refetch();
+  //   setRefreshing(false);
+  // };
 
   const getUserOptions = (users) => {
     if (!Array.isArray(users) || users.length === 0) return [];
@@ -99,6 +101,14 @@ const TimeTable = ({ navigation }) => {
   };
 
   const userOptions = getUserOptions(userInfo);
+
+  const selectedUseForAvail = selectedUserId
+  ? userInfo.find((user) => user.id === selectedUserId)
+  : undefined;
+
+const combinedAvailability = selectedUseForAvail
+  ? user.availability.concat(selectedUseForAvail.availability)
+  : user.availability;
 
   const submitSession = async () => {
     try {
@@ -173,29 +183,6 @@ const TimeTable = ({ navigation }) => {
       setLoading(false); // Ensure loading is turned off if there's an error
     }
   };
-
-  async function updateUserAvailability(userId, timeSlot) {
-    // Assuming you are using Firestore as your database
-    const userRef = firestore.collection("users").doc(userId);
-
-    // Get the current user's data
-    const userDoc = await userRef.get();
-    const userData = userDoc.data();
-
-    // Check if availability exists and add the new time slot
-    const updatedAvailability = userData.availability || [];
-
-    // Optionally prevent duplicates
-    if (!updatedAvailability.includes(timeSlot)) {
-      updatedAvailability.push(timeSlot);
-    }
-
-    // Update the user's document with the new availability
-    await userRef.update({ availability: updatedAvailability });
-
-    // Update the user state in the context
-    setUser({ ...userData, availability: updatedAvailability });
-  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -293,7 +280,8 @@ const TimeTable = ({ navigation }) => {
                         data={timeRanges}
                         keyExtractor={(item) => item}
                         renderItem={({ item }) => {
-                          const matchedAvailability = user.availability.find(
+                          // Check combined availability array for occupied times
+                          const matchedAvailability = combinedAvailability.find(
                             (avail) => {
                               const [availabilityDay, availabilityTime] =
                                 avail.split(", ");
@@ -303,7 +291,6 @@ const TimeTable = ({ navigation }) => {
                               );
                             }
                           );
-
                           return (
                             <>
                               {matchedAvailability ||

@@ -48,7 +48,7 @@ const signIn = () => {
       Alert.alert('Login Success');
 
 
-      console.log("Redirecting based on status:", result.status);
+      // console.log("Redirecting based on status:", result.status);
 
 
       if (result.status === "admin") {

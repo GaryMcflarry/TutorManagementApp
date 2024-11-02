@@ -11,7 +11,7 @@ import { StatusBar } from "expo-status-bar";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import { icons, images } from "../../constants";
 import { signOut } from "../../lib/firebase";
-import { router } from 'expo-router';
+import { router } from "expo-router";
 
 const StatusBarWrapper = ({ children, title }) => {
   //getting global state of user from the global provider
@@ -30,22 +30,21 @@ const StatusBarWrapper = ({ children, title }) => {
 
   return (
     <>
-        <View
-          className="bg-primary h-20 justify-center items-center p-2"
-          style={styles.shadow}
-        >
-          {/* <Text className="text-white font-pregular text-xs" style={styles.shadow}>14:43</Text> */}
-          <Text className="text-white font-pbold text-xl">{title}</Text>
-          <TouchableOpacity className="w-full" onPress={logout}>
-            <Image
-              source={icons.logout}
-              resizeMode="contain"
-              className="w-8 h-8"
-            />
-          </TouchableOpacity>
-        </View>
+      <View
+        className="bg-primary h-20 items-center p-2 flex-row justify-between px-6"
+        style={styles.shadow}
+      >
+        <Text className="text-white font-pbold text-xl">{title}</Text>
+        <TouchableOpacity onPress={logout} className="ml-4">
+          <Image
+            source={icons.logout}
+            resizeMode="contain"
+            className="w-8 h-8"
+          />
+        </TouchableOpacity>
+      </View>
 
-        {children}
+      {children}
       <StatusBar backgroundColor="#FEA07D" style="light" />
     </>
   );
