@@ -7,6 +7,11 @@ module.exports = {
         primary: "#FEA07D",
         secondary: "#FFFFFF",
         tertiary: "#4F7978",
+        tutorRC: "#E6C11D",
+        whatsapp:"#39753B",
+        microsoft: "#5458AF",
+        telegram: "#43A9E4",
+        formFieldGrey: "#D9D9D9",
         black: {
           DEFAULT: "#000",
           100: "#1E1E2D",

@@ -52,7 +52,7 @@ const RootLayout = () => {
         <Stack.Screen name="(pages)" options={{ headerShown: false }} />
         <Stack.Screen name="search/[query]" options={{ headerShown: false }} />
       </Stack>
-      <StatusBar backgroundColor="#161622" style="light" />
+      <StatusBar backgroundColor="#FEA07D" style="light" />
     </GlobalProvider>
   );
 };
