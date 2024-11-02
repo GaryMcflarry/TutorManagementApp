@@ -364,6 +364,7 @@ export const updateUser = async (
   chatLink,
   grade,
   address,
+  prevConnections,
   connectionsArray,
   tutorsToDelete
 ) => {
@@ -381,10 +382,14 @@ export const updateUser = async (
 
         console.log("Filtered Connections Array: ", filteredConnections);
 
+        const combinedConnections = [...prevConnections, ...filteredConnections];
+        console.log("Previous connections: ", prevConnections);
+        console.log("Combined Connections Array (New connections): ", combinedConnections);
+
         // Update the user record in Firebase, including additional fields
         const userRef = doc(FIREBASE_DB, "User", user.uid); // Correctly reference the document
         await updateDoc(userRef, {
-          connections: filteredConnections,
+          connections: combinedConnections,
           fullname: fullname,
           grade: grade,
           address: address,
