@@ -1,14 +1,34 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import React from 'react';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { useRoute } from '@react-navigation/native'; // To access the current route
 
-const customButton = () => {
+const CustomButton = ({ title, handlePress, containerStyles, isLoading }) => {
+  const route = useRoute(); // Get the current route
+
+  // Check if the current path includes '/search'
+  const isSearchRoute = route.name.includes('search');
+
   return (
-    <View>
-      <Text>customButton</Text>
-    </View>
-  )
-}
+    <TouchableOpacity
+      onPress={handlePress}
+      activeOpacity={0.7}
+      className={`${
+        isSearchRoute ? 'bg-primary' : 'bg-tertiary'
+      } ${containerStyles}`}
+      style={[styles.shadow]}
+      disabled={isLoading}
+    >
+    
+      <Text className="text-white font-psemibold text-lg">{title}</Text>
+    </TouchableOpacity>
+  );
+};
 
-export default customButton
+// Shadow style for Android devices
+const styles = StyleSheet.create({
+  shadow: {
+    elevation: 10,
+  }
+});
 
-const styles = StyleSheet.create({})
+export default CustomButton;
