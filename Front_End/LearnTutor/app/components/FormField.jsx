@@ -19,7 +19,7 @@ const FormField = ({ value, placeholder, handleChangeText, ...props }) => {
           placeholder === "Insert text here..."
             ? "bg-primary p-3 rounded-full w-[300px] items-center flex-row shadow-md" 
             : "border-2 border-primary h-16 px-4 bg-formFieldGrey rounded-md focus:border-secondary items-center flex-row w-[275px] my-2"
-        } ${placeholder === "Enter Email" || placeholder === "Enter Password" ? "w-[350px] my-8 border-tertiary" : ""} ${
+        } ${placeholder === "Enter Email" || placeholder === "Enter Password" ? "w-[90%] my-[8%] border-tertiary" : ""} ${
           placeholder === "Write down homework..."
             ? "h-[125px] w-[270px] border-primary mb-6"
             : ""

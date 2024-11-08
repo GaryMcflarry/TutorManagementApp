@@ -17,6 +17,9 @@ import FormField from "../components/FormField";
 
 
 const signIn = () => {
+
+
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,17 +27,11 @@ const signIn = () => {
 
   const signIn = async () => {
     
-
-
     if (!email || !password) {
       Alert.alert("Error", "Please fill in all the fields");
       return null;
     }
     
-
-    
-
-
     setLoading(true);
 
     try {
@@ -68,12 +65,12 @@ const signIn = () => {
 
 
   return (
-    <SafeAreaView className="bg-primary h-full">
+    <SafeAreaView className="bg-primary h-full w-full">
 
       <ScrollView contentContainerStyle={{ height: "100%" }}>
         <KeyboardAvoidingView behavior="padding">
-        <View className="w-full my-10 justify-center items-center">
-          <Text className="text-7xl font-pregular text-white mt-7 text-center">
+        <View className="w-full my-[17%] justify-center items-center">
+          <Text className="text-7xl font-pregular text-white mt-[7%] text-center">
             learn.
           </Text>
         </View>
@@ -90,8 +87,8 @@ const signIn = () => {
 
             />
 
-            <View className="w-[250px] justify-center items-center mt-14 h-2 bg-tertiary rounded-md"></View>
-            <View className="w-[140px] justify-center items-center mt-10 h-2 bg-tertiary rounded-md"></View>
+            <View className="w-[80%] justify-center items-center mt-14 h-[2%] bg-tertiary rounded-md"></View>
+            <View className="w-[40%] justify-center items-center mt-10 h-[2%] bg-tertiary rounded-md"></View>
 
           </View>
 
@@ -104,7 +101,7 @@ const signIn = () => {
               <CustomButton
                   title="Login"
                   handlePress={() => signIn()}
-                  containerStyles="w-[150px] h-[62px] justify-center items-center" />
+                  containerStyles="w-[40%] h-[65%] justify-center items-center" />
               </>
             )}
           </View>
@@ -117,4 +114,3 @@ const signIn = () => {
 
 export default signIn;
 
-const styles = StyleSheet.create({});
