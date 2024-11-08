@@ -25,11 +25,14 @@ import FormField from "../components/FormField";
 import { Dropdown } from "react-native-element-dropdown";
 import { CheckBox } from "@rneui/themed";
 import { Ionicons } from "@expo/vector-icons";
+import { useGlobalContext } from "../../context/GlobalProvider";
 
 const Admin = () => {
   //FUNCTIONALITY:
   //Obtaining all users for displaying:
   const [users, setUsers] = useState([]);
+
+  const { user } = useGlobalContext();
 
   //Grouping/filtering the obtained user based of their roles
   const admins = users.filter((user) => user.status === "admin");
@@ -38,8 +41,9 @@ const Admin = () => {
 
   //Fetching all the users upon page load
   useEffect(() => {
+    setLoading(true);
     const unsubscribe = listenToUsers(setUsers);
-
+    setLoading(false);
     return () => {
       unsubscribe();
     };
@@ -500,17 +504,33 @@ const Admin = () => {
     </View>
   );
   //Rendering the roe of the table to display the corresponding users information
+  const currentUserEmail = user.email;
   const renderTableRow = ({ item }, fields) => (
     <TouchableOpacity
       style={styles.tableRow}
       onPress={() => {
+        // Prevent self-deletion
+        if (item.email === currentUserEmail) {
+          Alert.alert(
+            "Action Not Allowed",
+            "You cannot delete your own Account.",
+            [
+              {
+                text: "OK",
+                onPress: () => console.log("Self-deletion prevented"),
+              },
+            ],
+            { cancelable: true }
+          );
+          return;
+        }
+
         const options = [
           {
             text: "Cancel",
             onPress: () => console.log("Cancel option selected"),
             style: "cancel",
           },
-          // Conditionally add the "Edit" option if the user is not an admin
           ...(item.status !== "admin"
             ? [
                 {
@@ -518,7 +538,7 @@ const Admin = () => {
                   onPress: () => {
                     console.log("Edit option selected for User ID:", item.uid);
                     console.log("Full User Information (pre-filter):", item);
-                    setEditedUser(item); // Set the edited user first
+                    setEditedUser(item);
 
                     if (item.status === "tutor") {
                       setChatLink(item.chatLink || "");
@@ -532,26 +552,44 @@ const Admin = () => {
                   },
                 },
               ]
-            : []), // No "Edit" option for admins
+            : []),
           {
             text: "Delete",
             onPress: () => {
-              console.log("Delete option selected for User ID:", item.uid);
-
               Alert.alert(
-                "Are you sure?",
-                "",
+                "Confirm Deletion",
+                "Are you sure you want to delete this user?",
                 [
                   {
                     text: "Yes",
                     onPress: async () => {
+                      setLoading(true); // Set loading to true
                       const success = await deleteUser(item.uid);
+                      setLoading(false); // Set loading to false once the operation is complete
+
                       if (success) {
-                        const updatedUsers = await getAllUsers();
-                        setUsers(updatedUsers);
+                        Alert.alert(
+                          "Success",
+                          "User has been deleted successfully",
+                          [
+                            {
+                              text: "OK",
+                              onPress: () => console.log("User deleted"),
+                            },
+                          ],
+                          { cancelable: true }
+                        );
                       } else {
-                        console.log(
-                          "User deletion failed or was not necessary"
+                        Alert.alert(
+                          "Error",
+                          "User deletion failed or was not necessary",
+                          [
+                            {
+                              text: "OK",
+                              onPress: () => console.log("Deletion failed"),
+                            },
+                          ],
+                          { cancelable: true }
                         );
                       }
                     },
@@ -770,37 +808,57 @@ const Admin = () => {
 
         {/* Admin Table */}
         <Text style={styles.tableTitle}>Admins</Text>
-        <FlatList
-          data={admins}
-          ListHeaderComponent={() => renderTableHeader(["Email"])}
-          renderItem={(item) => renderTableRow(item, ["email"])}
-          keyExtractor={(item) => item.uid}
-          contentContainerStyle={styles.tableContainer}
-        />
+        {loading ? (
+          <ActivityIndicator size="large" color="#FEA07D" />
+        ) : (
+          <>
+            <FlatList
+              data={admins}
+              ListHeaderComponent={() => renderTableHeader(["Email"])}
+              renderItem={(item) => renderTableRow(item, ["email"])}
+              keyExtractor={(item) => item.uid}
+              contentContainerStyle={styles.tableContainer}
+            />
+          </>
+        )}
 
         {/* Tutor Table */}
         <Text style={styles.tableTitle}>Tutors</Text>
-        <FlatList
-          data={tutors}
-          ListHeaderComponent={() => renderTableHeader(["Full Name", "Email"])}
-          renderItem={(item) => renderTableRow(item, ["fullname", "email"])}
-          keyExtractor={(item) => item.uid}
-          contentContainerStyle={styles.tableContainer}
-        />
+        {loading ? (
+          <ActivityIndicator size="large" color="#FEA07D" />
+        ) : (
+          <>
+            <FlatList
+              data={tutors}
+              ListHeaderComponent={() =>
+                renderTableHeader(["Full Name", "Email"])
+              }
+              renderItem={(item) => renderTableRow(item, ["fullname", "email"])}
+              keyExtractor={(item) => item.uid}
+              contentContainerStyle={styles.tableContainer}
+            />
+          </>
+        )}
 
         {/* Student Table */}
         <Text style={styles.tableTitle}>Students</Text>
-        <FlatList
-          data={students}
-          ListHeaderComponent={() =>
-            renderTableHeader(["Full Name", "Email", "Address", "Grade"])
-          }
-          renderItem={(item) =>
-            renderTableRow(item, ["fullname", "email", "address", "grade"])
-          }
-          keyExtractor={(item) => item.uid}
-          contentContainerStyle={styles.tableContainer}
-        />
+        {loading ? (
+          <ActivityIndicator size="large" color="#FEA07D" />
+        ) : (
+          <>
+            <FlatList
+              data={students}
+              ListHeaderComponent={() =>
+                renderTableHeader(["Full Name", "Email", "Address", "Grade"])
+              }
+              renderItem={(item) =>
+                renderTableRow(item, ["fullname", "email", "address", "grade"])
+              }
+              keyExtractor={(item) => item.uid}
+              contentContainerStyle={styles.tableContainer}
+            />
+          </>
+        )}
       </StatusBarWrapper>
     </SafeAreaView>
   );

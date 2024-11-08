@@ -212,11 +212,11 @@ export const getConnectedUsers = async (user) => {
       if (userId) {
         const userDoc = await getDoc(doc(FIREBASE_DB, "User", userId));
         if (userDoc.exists()) {
-          console.log("CONNECTED USER:", userDoc.data());
+         // console.log("CONNECTED USER:", userDoc.data());
           return { id: userDoc.id, subject, ...userDoc.data() };
         }
       } else {
-        console.log(`No connection ID for subject: ${subject}`);
+       // console.log(`No connection ID for subject: ${subject}`);
       }
       return null;
     });
@@ -719,6 +719,8 @@ export const deleteUser = async (userId) => {
       });
 
       await Promise.all(updatePromises);
+
+      return true;
     } else {
       console.error("Failed to delete user:", result.data.error);
     }
