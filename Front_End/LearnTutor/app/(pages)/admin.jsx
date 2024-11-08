@@ -129,10 +129,10 @@ const Admin = () => {
   }, [editedUser]); // Run whenever editedUser changes
   //Creating layout for subjects to be used for editing tutor details (Dialog box)
   const [subjects, setSubjects] = useState([
-    { subject: "Mathematics", capacity: 0, selected: false },
-    { subject: "English", capacity: 0, selected: false },
-    { subject: "Science", capacity: 0, selected: false },
-    { subject: "Geography", capacity: 0, selected: false },
+    { subject: "Mathematics", capacity: 1, selected: false },
+    { subject: "English", capacity: 1, selected: false },
+    { subject: "Science", capacity: 1, selected: false },
+    { subject: "Geography", capacity: 1, selected: false },
   ]);
 
   //Taking the template of the subjects state and seeing the current tutors amount of that subject
@@ -165,29 +165,29 @@ const Admin = () => {
       return subject === subjectName && studentId;
     });
 
-    // Proceed only if the subject is unselected and has no connected students
+    // Prevent deselection if subject has connected students
     if (!isSelected && hasConnectedStudents) {
-      // Show an alert if attempting to deselect a subject with connected students
       alert(
         `Cannot remove subject ${subjectName}. Students are currently connected. Remove connections first.`
       );
       return;
     }
 
-    // Update subjects selection in state
-    const updatedSubjects = subjects.map((subjectObj) => {
-      if (subjectObj.subject === subjectName) {
-        return {
-          ...subjectObj,
-          selected: isSelected, // Set selected state based on the checkbox
-        };
-      }
-      return subjectObj;
+    // Update subjects selection in state based on subject name
+    setSubjects((prevSubjects) => {
+      return prevSubjects.map((subjectObj, index) => {
+        if (subjectObj.subject === subjectName) {
+          return {
+            ...subjectObj,
+            capacity: 1,
+            selected: isSelected, // Update selected state based on the passed value
+          };
+        }
+        return subjectObj;
+      });
     });
 
-    setSubjects(updatedSubjects); // Update subjects state
-
-    // Update editedUser's connections if the subject is being deselected
+    // If the subject is being deselected, update connections
     if (!isSelected) {
       const updatedConnections = editedUser.connections.filter((connection) => {
         const [subject] = connection.includes(" ")
@@ -218,8 +218,17 @@ const Admin = () => {
     // Map over subjects to update only the relevant subject's capacity
     const updatedSubjects = subjects.map((subjectObj) => {
       if (subjectObj.subject === subjectName) {
-        // Check if the current capacity is greater than minCapacity
+        // Check if current capacity can be decreased
         if (subjectObj.capacity > minCapacity) {
+          if (subjectObj.capacity === 1) {
+            // Call function to unselect the subject if capacity reaches 1
+            removeAssignedSubject(subjectName, false);
+            return {
+              ...subjectObj,
+              capacity: 0, // Set capacity to 0
+              selected: false, // Unselect the subject
+            };
+          }
           // Decrease capacity by 1
           return {
             ...subjectObj,
@@ -237,6 +246,7 @@ const Admin = () => {
 
     setSubjects(updatedSubjects); // Update the state with the modified subjects array
   };
+
   //When trying to add to the amount of student slots for a subject for a tutor
   const increaseCapacity = async (subjectName) => {
     // Use map to create a new array and avoid direct mutation
