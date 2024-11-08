@@ -76,8 +76,8 @@ const signIn = () => {
             handleChangeText={(text) => setPassword(text)}
           />
 
-          <View className="w-[80%] justify-center items-center mt-14 h-[2%] bg-tertiary rounded-md"></View>
-          <View className="w-[40%] justify-center items-center mt-10 h-[2%] bg-tertiary rounded-md"></View>
+          <View className="w-[80%] md:w-[60%] justify-center items-center mt-14 h-[2%] bg-tertiary rounded-md"></View>
+          <View className="w-[40%] md:w-[20%] justify-center items-center mt-10 h-[2%] bg-tertiary rounded-md"></View>
         </View>
 
         <View className="h-[100px] w-full justify-center items-center mt-5">
@@ -88,7 +88,7 @@ const signIn = () => {
               <CustomButton
                 title="Login"
                 handlePress={() => signIn()}
-                containerStyles="w-[40%] h-[65%] justify-center items-center"
+                containerStyles="w-[40%] md:w-[30%] h-[65%] justify-center items-center border-none rounded-md"
               />
             </>
           )}

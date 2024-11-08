@@ -23,7 +23,7 @@ const ResourceCard = ({ link, tutorData }) => {
           </View>
           <View>
             <View style={{ padding: 10 }}>
-              <Text className="text-tutorRC font-pbold">Book a session</Text>
+              <Text className="text-tutorRC font-pbold md:text-xl">Book a session</Text>
               <Text className="font-bold text-sm">
                 Book a session with your tutor!
               </Text>
@@ -50,17 +50,17 @@ const ResourceCard = ({ link, tutorData }) => {
         return (
           <View>
             <View
-              className="bg-whatsapp justify-center items-center"
+              className="bg-whatsapp justify-center items-center h-min-1 w-[100%] rounded-tl-lg rounded-tr-md" 
               style={[styles.header]}
             >
               <Image source={icons.WhatsAppIcon} className="w-20 h-20" />
             </View>
             <View>
               <View style={{ padding: 10 }}>
-                <Text className="text-wGreen font-pbold">
+                <Text className="text-wGreen text-whatsapp font-pbold md:text-xl">
                   WhatsApp Chat Link
                 </Text>
-                <Text className="font-bold text-sm">
+                <Text className="font-bold text-sm md:text-lg">
                   Contact Your Tutor via WhatsApp!
                 </Text>
               </View>
@@ -104,7 +104,7 @@ const ResourceCard = ({ link, tutorData }) => {
             </View>
             <View>
               <View style={{ padding: 10 }}>
-                <Text className="text-microsoft font-pbold">
+                <Text className="text-microsoft font-pbold md:text-xl">
                   Microsoft Teams Session
                 </Text>
                 <Text className="font-bold text-sm">
@@ -152,7 +152,7 @@ const ResourceCard = ({ link, tutorData }) => {
             </View>
             <View>
               <View style={{ padding: 10 }}>
-                <Text className="text-telegram font-pbold">
+                <Text className="text-telegram font-pbold md:text-xl">
                   Telegram Chat Link
                 </Text>
                 <Text className="font-bold text-sm">
@@ -200,7 +200,7 @@ const ResourceCard = ({ link, tutorData }) => {
             </View>
             <View>
               <View style={{ padding: 10 }}>
-                <Text className="text-gray-400 font-pbold">
+                <Text className="text-gray-400 font-pbold md:text-xl">
                   Google Meet Session
                 </Text>
                 <Text className="font-bold text-sm">

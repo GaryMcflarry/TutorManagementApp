@@ -807,11 +807,11 @@ const Admin = () => {
         </View>
 
         {/* Admin Table */}
-        <Text style={styles.tableTitle}>Admins</Text>
         {loading ? (
           <ActivityIndicator size="large" color="#FEA07D" />
         ) : (
           <>
+            <Text style={styles.tableTitle}>Admins</Text>
             <FlatList
               data={admins}
               ListHeaderComponent={() => renderTableHeader(["Email"])}
@@ -819,15 +819,7 @@ const Admin = () => {
               keyExtractor={(item) => item.uid}
               contentContainerStyle={styles.tableContainer}
             />
-          </>
-        )}
-
-        {/* Tutor Table */}
-        <Text style={styles.tableTitle}>Tutors</Text>
-        {loading ? (
-          <ActivityIndicator size="large" color="#FEA07D" />
-        ) : (
-          <>
+            <Text style={styles.tableTitle}>Tutors</Text>
             <FlatList
               data={tutors}
               ListHeaderComponent={() =>
@@ -837,15 +829,7 @@ const Admin = () => {
               keyExtractor={(item) => item.uid}
               contentContainerStyle={styles.tableContainer}
             />
-          </>
-        )}
-
-        {/* Student Table */}
-        <Text style={styles.tableTitle}>Students</Text>
-        {loading ? (
-          <ActivityIndicator size="large" color="#FEA07D" />
-        ) : (
-          <>
+            <Text style={styles.tableTitle}>Students</Text>
             <FlatList
               data={students}
               ListHeaderComponent={() =>

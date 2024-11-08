@@ -59,12 +59,11 @@ const Conversations = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView>
+    <SafeAreaView className="w-full h-full">
       <StatusBarWrapper title="Chats">
         <View className="w-full h-[70px] items-end p-3">
           <MenuButton handlePress={() => navigation.toggleDrawer()} />
         </View>
-        <View className="w-full h-full">
           <View className="w-full h-[70px] justify-center items-center">
             {/* Search Input */}
             <SearchInput
@@ -76,7 +75,7 @@ const Conversations = ({ navigation }) => {
 
           {/* Display the list of conversations */}
           <ScrollView>
-            <View className="w-full h-full bg-transparent justify-start items-center">
+            <View className="w-full bg-transparent justify-start items-center">
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((connectedUser) => (
                   <ConversationBar
@@ -92,34 +91,17 @@ const Conversations = ({ navigation }) => {
                 <View className="justify-center items-center p-20">
                   <Image
                     source={images.empty}
-                    className="h-[150px] w-[150px]"
+                    className="h-[150px] w-[150px] md:h-[300px] md:w-[300px]"
                   />
-                  <Text className="text-lg text-[#888]">No results found</Text>
+                  <Text className="text-lg md:text-xl text-[#888]">No results found</Text>
                 </View>
               )}
             </View>
           </ScrollView>
-        </View>
       </StatusBarWrapper>
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  noResultsContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  noResultsImage: {
-    width: 200, // Adjust size as needed
-    height: 200,
-    marginBottom: 10,
-  },
-  noResultsText: {
-    fontSize: 16,
-    color: "#888", // Adjust color as needed
-  },
-});
 
 export default Conversations;
