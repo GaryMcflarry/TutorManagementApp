@@ -17,7 +17,7 @@ const FormField = ({ value, placeholder, handleChangeText, ...props }) => {
         style={styles.shadow}
         className={`${
           placeholder === "Insert text here..."
-            ? "bg-primary p-3 rounded-full w-[300px] items-center flex-row shadow-md" 
+            ? "bg-primary p-3 rounded-full w-[230px] md:w-[500px] items-center flex-row" 
             : "border-2 border-primary h-16 px-4 bg-formFieldGrey rounded-md focus:border-secondary items-center flex-row w-[275px] my-2"
         } ${placeholder === "Enter Email" || placeholder === "Enter Password" ? "w-[90%] my-[8%] border-tertiary" : ""} ${
           placeholder === "Write down homework..."
@@ -26,7 +26,7 @@ const FormField = ({ value, placeholder, handleChangeText, ...props }) => {
         }`}
       >
         <TextInput
-          className={`flex-1 text-tertiary text-base h-full w-full ${
+          className={`flex-1 text-tertiary text-base md:text-xl h-full w-full ${
             placeholder === "Enter Password" ||
             placeholder === "Enter Email" ||
             placeholder === "Write down homework..."

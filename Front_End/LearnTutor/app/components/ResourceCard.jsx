@@ -107,7 +107,7 @@ const ResourceCard = ({ link, tutorData }) => {
                 <Text className="text-microsoft font-pbold md:text-xl">
                   Microsoft Teams Session
                 </Text>
-                <Text className="font-bold text-sm">
+                <Text className="font-bold text-sm md:text-lg">
                   Join your allocated teams session!
                 </Text>
               </View>
@@ -155,7 +155,7 @@ const ResourceCard = ({ link, tutorData }) => {
                 <Text className="text-telegram font-pbold md:text-xl">
                   Telegram Chat Link
                 </Text>
-                <Text className="font-bold text-sm">
+                <Text className="font-bold text-sm md:text-lg">
                   Contact Your Tutor via Telegram!
                 </Text>
               </View>
@@ -203,7 +203,7 @@ const ResourceCard = ({ link, tutorData }) => {
                 <Text className="text-gray-400 font-pbold md:text-xl">
                   Google Meet Session
                 </Text>
-                <Text className="font-bold text-sm">
+                <Text className="font-bold text-sm md:text-lg">
                   Join your allocated session!
                 </Text>
               </View>

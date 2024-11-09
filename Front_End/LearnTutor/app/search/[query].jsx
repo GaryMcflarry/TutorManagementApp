@@ -25,7 +25,7 @@ import {
   fetchRecipientInfo,
 } from "../../lib/firebase";
 import useFirebase from "../../lib/useFirebase";
-import { icons } from "../../constants";
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
@@ -79,12 +79,12 @@ const Chat = () => {
                 navigation.goBack();
               }}
             >
-              <Image source={icons.leftArrow} />
+              <Icon name="arrow-back-outline" color="#4F7978" size={50}/>
             </TouchableOpacity>
           </View>
           <View className="flex-1 w-full">
             <View className="h-12 w-full justify-center">
-              <Text className="text-primary text-2xl ml-10 font-bold">
+              <Text className="text-primary text-2xl md:text-4xl ml-10 font-bold">
                 {recipientInfo?.fullname
                   ? recipientInfo.fullname
                   : "Loading..."}
@@ -114,16 +114,15 @@ const Chat = () => {
               </ScrollView>
             </View>
             {/* Align FormField and CustomButton */}
-            <View className="flex-row items-center bg-[#E5E5E5] px-5 py-3">
+            <View className="flex-row items-center justify-center bg-[#E5E5E5] px-5 py-3">
               <FormField
                 value={newMessage}
                 handleChangeText={(text) => setNewMessage(text)}
                 placeholder="Insert text here..."
-                className="flex-1 mr-3"
               />
               <CustomButton
                 title="Send"
-                containerStyles="w-12 h-12 rounded-full justify-center items-center ml-5"
+                containerStyles="rounded-md justify-center items-center ml-5 p-1"
                 handlePress={() => handleSendMessage()}
               />
             </View>

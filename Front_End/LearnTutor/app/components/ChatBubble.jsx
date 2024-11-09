@@ -7,11 +7,10 @@ const ChatBubble = ({ message, time, isSender }) => {
     <View className={`flex flex-row items-end my-2 ${isSender ? 'justify-start' : 'justify-end'}`}>
       {/* Display avatar for the sender (reverse the avatar display logic) */}
       {isSender && (
-        <View className="w-8 h-8 bg-gray-300 rounded-full mr-2 self-end">
+        <View className="w-8 h-8 md:w-12 md:h-12 bg-gray-300 rounded-full mr-2 self-end">
           <Image source={icons.profile} className="w-full h-full rounded-full" />
         </View>
-      )}
-      
+      )}  
       {/* Container for the chat bubble and timestamp */}
       <View style={styles.bubbleContainer}>
         {/* Chat bubble */}
@@ -22,20 +21,20 @@ const ChatBubble = ({ message, time, isSender }) => {
             isSender ? styles.senderBubble : styles.receiverBubble,
           ]}
         >
-          <Text className="font-semibold" style={styles.bubbleText}>{message}</Text>
+          <Text className="font-semibold text-base md:text-xl text-white">{message}</Text>
           <View style={[styles.bubbleTip, isSender ? styles.tipLeft : styles.tipRight]} />
         </View>
 
         {/* Timestamp below the chat bubble, aligned opposite to the profile icon */}
-        <Text className="font-semibold" 
-        style={[styles.timeText, isSender ? styles.timeRight : styles.timeLeft]}>
+        <Text className="font-semibold text-sm md:text-lg text-[#666] mt-4" 
+        style={[isSender ? styles.timeRight : styles.timeLeft]}>
           {time}
         </Text>
       </View>
 
       {/* Display avatar for the receiver */}
       {!isSender && (
-        <View className="w-8 h-8 bg-gray-300 rounded-full ml-2 self-end">
+        <View className="w-8 h-8 md:w-12 md:h-12 bg-gray-300 rounded-full ml-2 self-end">
           <Image source={icons.profile} className="w-full h-full rounded-full" />
         </View>
       )}
@@ -86,15 +85,6 @@ const styles = StyleSheet.create({
     borderTopColor: 'transparent',
     borderLeftWidth: 0,
     borderBottomWidth: 0,
-  },
-  bubbleText: {
-    color: 'white',
-    fontSize: 16,
-  },
-  timeText: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 10,
   },
   timeLeft: {
     textAlign: 'left',

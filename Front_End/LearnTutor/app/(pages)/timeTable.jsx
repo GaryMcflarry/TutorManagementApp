@@ -211,7 +211,7 @@ const TimeTable = ({ navigation }) => {
                     setType("");
                   }}
                 >
-                  <Text style={styles.textStyle} className="text-lg">
+                  <Text style={styles.textStyle} className="text-lg md:text-2xl">
                     X
                   </Text>
                 </TouchableOpacity>
@@ -375,7 +375,7 @@ const TimeTable = ({ navigation }) => {
         {loading ? (
           <ActivityIndicator className="my-5" size="large" color="#FEA07D" />
         ) : (
-          <PagerView style={{ flex: 1 }} initialPage={0}>
+          <PagerView style={{ flex: 1, width: '100%' }} initialPage={0}>
             {days.map((day) => (
               <View key={day} style={styles.page}>
                 <View className="flex-row justify-between items-center px-4">

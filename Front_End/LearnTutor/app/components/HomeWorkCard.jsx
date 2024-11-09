@@ -58,8 +58,8 @@ const HomeWorkCard = ({ subject, homeworkItems, recipientName, userStatus }) => 
       className=" border-none rounded-lg my-2"
     >
       <View className="flex-row justify-between items-center h-[50px] bg-primary w-full rounded-t-lg px-2">
-        <Text className="text-white font-bold text-base">{subject}</Text>
-        <Text className="text-white font-bold text-base">{recipientName}</Text>
+        <Text className="text-white font-bold text-base md:text-xl">{subject}</Text>
+        <Text className="text-white font-bold text-base md:text-xl">{recipientName}</Text>
       </View>
       <View className="p-5">
         {homeworkItems.length === 0 ? ( // Check if homeworkItems is empty
@@ -70,10 +70,10 @@ const HomeWorkCard = ({ subject, homeworkItems, recipientName, userStatus }) => 
             keyExtractor={(item) => item.id} // Ensure item.id is unique
             renderItem={({ item }) => (
               <View className="flex-row items-center  p-3 border-none rounded-md" style={{ backgroundColor : getSubjectStyle(subject).activityBg}}>
-                <Text className="text-white text-base flex-1 ml-2">
+                <Text className="text-white text-base md:text-xl flex-1 ml-2">
                   {item.description || "No Description"}
                 </Text>
-                <Text className="text-white text-sm ml-2">{item.dueDate}</Text>
+                <Text className="text-white text-sm md:text-lg ml-2">{item.dueDate}</Text>
                 {userStatus === "tutor" && (
                   <TouchableOpacity onPress={() => handleDelete(item.id)}>
                     <Ionicons name="close" size={24} color="white" />

@@ -3,9 +3,16 @@ import { Card, Text } from "@rneui/themed";
 import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { listenToSessionDetails, deleteSession } from "../../lib/firebase";
 import { useGlobalContext } from "../../context/GlobalProvider";
+import { Dimensions } from 'react-native';
+const screenWidth = Dimensions.get('window').width;
 
 const TimeTableCard = ({ sessionId, time, sessionDetails, day }) => {
   const { user, setUser } = useGlobalContext();
+
+
+
+
+
 
   // Dynamic background colors based on subject
   const backgroundColors = {
@@ -117,8 +124,8 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 20,
     padding: 0,
-    width: 300,
-    height: 100,
+    width: screenWidth > 768 ? 500 : 300,
+    height: screenWidth > 768 ? 150 : 100,
     alignSelf: "center",
     marginBottom: 5,
     elevation: 10,
