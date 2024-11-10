@@ -250,7 +250,7 @@ const signUp = () => {
                   setAvailableSubjects([...availableSubjects]); // Update state
                 }}
               >
-                <Text style={styles.textStyle} className="text-lg text-white">
+                <Text className="text-lg text-white">
                   X
                 </Text>
               </TouchableOpacity>
@@ -322,12 +322,12 @@ const signUp = () => {
                   handleChangeText={(text) => setAddress(text)}
                 />
 
-                <View className="w-full p-3">
+                <View className="w-full p-1">
                   {availableSubjects.map((subjectObj, index) => (
                     <View key={index}>
-                      <View className="flex-row items-center justify-between w-[90%]">
+                      <View className="flex-row items-center justify-end w-[90%]">
                         {/* Display the subject name directly */}
-                        <Text className="text-base text-white">
+                        <Text className="text-base text-white mr-2">
                           {subjectObj.subject}
                         </Text>
 
@@ -382,7 +382,7 @@ const signUp = () => {
               <>
                 {status === "tutor" && (
                   <TouchableOpacity
-                    className={`bg-primary p-3 border-none rounded-xl mt-10 ${
+                    className={`bg-primary p-3 border-none rounded-xl mt-2 ${
                       !isFormValid(status) ? "opacity-50" : ""
                     }`}
                     style={styles.shadow}
@@ -395,7 +395,7 @@ const signUp = () => {
                 )}
                 {status === "student" && (
                   <TouchableOpacity
-                    className={`bg-primary p-3 border-none rounded-xl mt-10 ${
+                    className={`bg-primary p-3 border-none rounded-xl mt-2 ${
                       !isFormValid(status) ? "opacity-50" : ""
                     }`}
                     style={styles.shadow}
