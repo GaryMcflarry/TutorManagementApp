@@ -234,7 +234,7 @@ const signUp = () => {
             className="bg-tertiary border-none rounded-lg p-5 items-center"
             style={styles.shadow}
           >
-            <View className="w-[300px] h-[30px] flex-row justify-end items-center">
+            <View className="w-[90%] h-[30px] flex-row justify-end items-center">
               <TouchableOpacity
                 style={styles.shadow}
                 onPress={() => {
@@ -250,7 +250,7 @@ const signUp = () => {
                   setAvailableSubjects([...availableSubjects]); // Update state
                 }}
               >
-                <Text className="text-lg text-white">
+                <Text className="text-xl text-white">
                   X
                 </Text>
               </TouchableOpacity>
@@ -322,12 +322,11 @@ const signUp = () => {
                   handleChangeText={(text) => setAddress(text)}
                 />
 
-                <View className="w-full p-1">
                   {availableSubjects.map((subjectObj, index) => (
                     <View key={index}>
-                      <View className="flex-row items-center justify-end w-[90%]">
+                      <View className="flex-row items-center justify-center w-[90%]">
                         {/* Display the subject name directly */}
-                        <Text className="text-base text-white mr-2">
+                        <Text className="text-base text-white mx-5">
                           {subjectObj.subject}
                         </Text>
 
@@ -373,7 +372,6 @@ const signUp = () => {
                       </View>
                     </View>
                   ))}
-                </View>
               </>
             )}
             {loading ? (
@@ -382,7 +380,7 @@ const signUp = () => {
               <>
                 {status === "tutor" && (
                   <TouchableOpacity
-                    className={`bg-primary p-3 border-none rounded-xl mt-2 ${
+                    className={`bg-primary p-3 border-none rounded-xl mt-1 ${
                       !isFormValid(status) ? "opacity-50" : ""
                     }`}
                     style={styles.shadow}
@@ -504,11 +502,13 @@ const styles = StyleSheet.create({
   dropdown: {
     width: 150,
     height: 50,
-    borderColor: "gray",
+    borderColor: "white",
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 8,
     backgroundColor: "#4F7978", // Dropdown background color
+    marginHorizontal: 10,
+    marginVertical: 5
   },
   placeholderStyle: {
     color: "#FFFFFF", // Placeholder text color

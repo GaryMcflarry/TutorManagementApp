@@ -434,9 +434,9 @@ const Admin = () => {
     return (
       <View
         key={index}
-        className="flex-row items-center justify-between w-[90%]"
+        className="flex-row items-center justify-center w-[100%]"
       >
-        <Text className="text-base mx-5 text-white">{subjectObj.subject}</Text>
+        <Text className="text-base text-white">{subjectObj.subject}</Text>
 
         {/* Only display the tutor information if there is a connection */}
         {connection ? (
@@ -448,8 +448,9 @@ const Admin = () => {
               }}
               style={{ opacity: fadeOut ? 0.5 : 1 }} // Fade-out effect
             >
-              <Text style={styles.tutorNameText}>{tutorName}</Text>
-              <Text style={styles.removeButtonText}>X</Text>
+            <View className="mx-2 p-2 border-white rounded-md">
+              <Text className="text-sm text-white">{tutorName} X</Text>
+            </View>
             </TouchableOpacity>
           </>
         ) : (
@@ -632,7 +633,7 @@ const Admin = () => {
       >
         <View className="flex-1 justify-center items-center">
           <View
-            className="bg-tertiary border-none rounded-lg p-5 items-center"
+            className="bg-tertiary border-none rounded-lg p-3 items-center"
             style={styles.shadow}
           >
             <View className="w-[300px] h-[30px] flex-row justify-end items-center">
@@ -645,7 +646,7 @@ const Admin = () => {
                   setTutorsToDelete([]);
                 }}
               >
-                <Text style={styles.textStyle} className="text-lg text-white">
+                <Text style={styles.textStyle} className="text-xl text-white">
                   X
                 </Text>
               </TouchableOpacity>
@@ -764,7 +765,7 @@ const Admin = () => {
               <>
                 {editedUser.status === "tutor" && (
                   <TouchableOpacity
-                    className={`bg-primary p-3 border-none rounded-xl mt-10`}
+                    className={`bg-primary p-3 border-none rounded-xl`}
                     style={styles.shadow}
                     onPress={() => {
                       handleUpdateUser();
@@ -779,7 +780,7 @@ const Admin = () => {
                 )}
                 {editedUser.status === "student" && (
                   <TouchableOpacity
-                    className={`bg-primary p-3 border-none rounded-xl mt-10`}
+                    className={`bg-primary p-3 border-none rounded-xl`}
                     style={styles.shadow}
                     onPress={() => {
                       handleUpdateUser();
@@ -911,11 +912,13 @@ const styles = StyleSheet.create({
   dropdown: {
     width: 150,
     height: 50,
-    borderColor: "gray",
+    borderColor: "white",
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 8,
     backgroundColor: "#4F7978", // Dropdown background color
+    marginHorizontal: 10,
+    marginVertical: 5
   },
   placeholderStyle: {
     color: "#FFFFFF", // Placeholder text color
