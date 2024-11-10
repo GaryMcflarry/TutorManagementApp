@@ -205,7 +205,7 @@ const Homework = ({ navigation }) => {
           style={{ flex: 1, justifyContent: "center", paddingHorizontal: 10 }}
         >
           {Object.keys(groupedHomework).length === 0 ? (
-            <Text className="align-center  text-[#888] text-lg">
+            <Text className="align-center text-[#888] text-lg">
               No Homework Assigned
             </Text>
           ) : (

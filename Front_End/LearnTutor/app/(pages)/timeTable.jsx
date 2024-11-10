@@ -63,15 +63,16 @@ const TimeTable = ({ navigation }) => {
 
   useEffect(() => {
     // Call fetchSessions and store the unsubscribe function
+    setLoading(true);
     const unsubscribe = fetchSessions(user.uid, user.status, setGroupedSession);
     //console.log("Current logged in user: ", user);
-    // Cleanup function to unsubscribe
+    setLoading(false);
     return () => {
       if (typeof unsubscribe === "function") {
         unsubscribe(); // Call unsubscribe if it's a function
       }
     };
-  }, [user.uid, user.availability]);
+  }, []);
 
   const { data: userInfo, refetch } = useFirebase(() =>
     getConnectedUsers(user)
@@ -103,12 +104,12 @@ const TimeTable = ({ navigation }) => {
   const userOptions = getUserOptions(userInfo);
 
   const selectedUseForAvail = selectedUserId
-  ? userInfo.find((user) => user.id === selectedUserId)
-  : undefined;
+    ? userInfo.find((user) => user.id === selectedUserId)
+    : undefined;
 
-const combinedAvailability = selectedUseForAvail
-  ? user.availability.concat(selectedUseForAvail.availability)
-  : user.availability;
+  const combinedAvailability = selectedUseForAvail
+    ? user.availability.concat(selectedUseForAvail.availability)
+    : user.availability;
 
   const submitSession = async () => {
     try {
@@ -210,7 +211,7 @@ const combinedAvailability = selectedUseForAvail
                     setType("");
                   }}
                 >
-                  <Text style={styles.textStyle} className="text-lg">
+                  <Text style={styles.textStyle} className="text-lg md:text-2xl">
                     X
                   </Text>
                 </TouchableOpacity>
@@ -371,24 +372,23 @@ const combinedAvailability = selectedUseForAvail
           />
           <MenuButton handlePress={() => navigation.toggleDrawer()} />
         </View>
-        <PagerView style={{ flex: 1 }} initialPage={0}>
-          {days.map((day) => (
-            <View key={day} style={styles.page}>
-              <View className="flex-row justify-between items-center px-4">
-                <Icon name="chevron-back-outline" color="#4F7978" size={50} />
-                <Text className="text-xl mx-8 font-semibold text-[#4F7978]">
-                  {day}
-                </Text>
-                <Icon
-                  name="chevron-forward-outline"
-                  color="#4F7978"
-                  size={50}
-                />
-              </View>
-
-              {loading ? (
-                <ActivityIndicator size="large" color="#0000ff" /> // Show a loader or placeholder
-              ) : (
+        {loading ? (
+          <ActivityIndicator className="my-5" size="large" color="#FEA07D" />
+        ) : (
+          <PagerView style={{ flex: 1, width: '100%' }} initialPage={0}>
+            {days.map((day) => (
+              <View key={day} style={styles.page}>
+                <View className="flex-row justify-between items-center px-4">
+                  <Icon name="chevron-back-outline" color="#4F7978" size={50} />
+                  <Text className="text-xl mx-8 font-semibold text-[#4F7978]">
+                    {day}
+                  </Text>
+                  <Icon
+                    name="chevron-forward-outline"
+                    color="#4F7978"
+                    size={50}
+                  />
+                </View>
                 <FlatList
                   data={timeRanges}
                   keyExtractor={(item) => item}
@@ -424,10 +424,10 @@ const combinedAvailability = selectedUseForAvail
                     );
                   }}
                 />
-              )}
-            </View>
-          ))}
-        </PagerView>
+              </View>
+            ))}
+          </PagerView>
+        )}
       </StatusBarWrapper>
     </SafeAreaView>
   );

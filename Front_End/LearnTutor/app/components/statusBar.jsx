@@ -31,15 +31,15 @@ const StatusBarWrapper = ({ children, title }) => {
   return (
     <>
       <View
-        className="bg-primary h-20 items-center p-2 flex-row justify-between px-6"
+        className="bg-primary h-[10%] items-center p-2 flex-row justify-between px-6"
         style={styles.shadow}
       >
-        <Text className="text-white font-pbold text-xl">{title}</Text>
+        <Text className="text-white font-pbold text-xl md:text-3xl">{title}</Text>
         <TouchableOpacity onPress={logout} className="ml-4">
           <Image
             source={icons.logout}
             resizeMode="contain"
-            className="w-8 h-8"
+            className="w-8 h-8 md:w-12 md:h-12"
           />
         </TouchableOpacity>
       </View>

@@ -9,35 +9,36 @@ import { getConnectedUsers } from "../../lib/firebase";
 import useFirebase from "../../lib/useFirebase";
 import { Dropdown } from "react-native-element-dropdown";
 
-
-// Utility function to convert subjects in `connections` into { label, value } format
-const getSubjectOptions = (user) => {
-  if (!user || !user.connections || user.connections.length === 0) return [];
-
-  // Extract unique subjects from connections that include an ID
-  const subjects = [
-    ...new Set(
-      user.connections
-        .filter((connection) => connection.split(" ")[1]) // Only keep connections with an ID
-        .map((connection) => connection.split(" ")[0]) // Extract the subject part
-    ),
-  ];
-
-  // Return formatted options for the dropdown
-  return subjects.map((subject) => ({
-    label: subject,
-    value: subject,
-  }));
-};
-
 const Home = ({ navigation }) => {
   const { user } = useGlobalContext();
-  const { data: userInfo, refetch } = useFirebase(() => getConnectedUsers(user));
+  const { data: userInfo, refetch } = useFirebase(() =>
+    getConnectedUsers(user)
+  );
 
+  // Utility function to convert subjects in `connections` into { label, value } format
+  const getSubjectOptions = (user) => {
+    if (!user || !user.connections || user.connections.length === 0) return [];
+
+    // Extract unique subjects from connections that include an ID
+    const subjects = [
+      ...new Set(
+        user.connections
+          .filter((connection) => connection.split(" ")[1]) // Only keep connections with an ID
+          .map((connection) => connection.split(" ")[0]) // Extract the subject part
+      ),
+    ];
+
+    // Return formatted options for the dropdown
+    return subjects.map((subject) => ({
+      label: subject,
+      value: subject,
+    }));
+  };
 
   const [refreshing, setRefreshing] = useState(false);
-  const [subject, setSubject] = useState(getSubjectOptions(user)[0]?.value || ""); // Default to first subject, if available
-
+  const [subject, setSubject] = useState(
+    getSubjectOptions(user)[0]?.value || ""
+  ); // Default to first subject, if available
 
   // Get subject options using the utility function
   const subjectOptions = getSubjectOptions(user);
@@ -48,16 +49,10 @@ const Home = ({ navigation }) => {
     setRefreshing(false);
   };
 
-  // Determine whether the user is a tutor
-  const isTutor = user.status === "tutor";
-
-  // Log userInfo to the console to inspect the data before filtering
-  // console.log("userInfo:", userInfo);
-
   return (
     <SafeAreaView className="bg-white h-full w-full">
       <StatusBarWrapper title="Home">
-        {isTutor ? (
+        {user.status === "tutor" ? (
           // If user is a tutor, show their own information
           <FlatList
             data={[user]} // Using user's own info for tutors
@@ -81,8 +76,7 @@ const Home = ({ navigation }) => {
         ) : (
           <FlatList
             data={userInfo.filter(
-              (tutor) =>
-                tutor.subject === subject // Only include tutors for the selected subject
+              (tutor) => tutor.subject === subject // Only include tutors for the selected subject
             )}
             renderItem={({ item }) => (
               <View>

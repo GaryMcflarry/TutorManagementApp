@@ -19,7 +19,7 @@ const CustomButton = ({ title, handlePress, containerStyles, isLoading }) => {
       disabled={isLoading}
     >
     
-      <Text className="text-white font-psemibold text-lg">{title}</Text>
+      <Text className="text-white font-psemibold text-lg md:text-2xl">{title}</Text>
     </TouchableOpacity>
   );
 };
