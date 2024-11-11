@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, View, Image } from "react-native";
+import { ScrollView, Text, View, Image } from "react-native";
 import React, { useState, useEffect } from "react";
 import StatusBarWrapper from "../components/statusBar";
 import MenuButton from "../components/MenuButton";
@@ -11,18 +11,15 @@ import { getConnectedUsers } from "../../lib/firebase";
 import { images } from "../../constants";
 
 const Conversations = ({ navigation }) => {
+  
   const { user } = useGlobalContext(); // Get the logged-in user
   const [searchQuery, setSearchQuery] = useState(""); // For search input
   const [connectedUsers, setConnectedUsers] = useState([]); // List of connected users
   const [filteredUsers, setFilteredUsers] = useState([]); // Filtered users based on search
 
-  // console.log("Connected Users: ", connectedUsers)
-
-  // Fetch connected users (tutors or students)
-  //const { data: usersData, refetch } = useFirebase(() => getContacts(user));
-
   // Fetch connected users (tutors or students)
 
+  //Another ay of fetching the connected users, see home page for alternative
   useEffect(() => {
     const fetchContacts = async () => {
       try {
@@ -42,6 +39,7 @@ const Conversations = ({ navigation }) => {
 
     fetchContacts();
   }, [user]); // Fetch users on component mount or when `user` changes
+
 
   // Handle Search Input
   const handleSearch = (text) => {

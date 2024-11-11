@@ -10,7 +10,9 @@ import useFirebase from "../../lib/useFirebase";
 import { Dropdown } from "react-native-element-dropdown";
 
 const Home = ({ navigation }) => {
+  //Obtaining currently logged in user
   const { user } = useGlobalContext();
+  //Fetching users via connections array
   const { data: userInfo, refetch } = useFirebase(() =>
     getConnectedUsers(user)
   );
@@ -35,7 +37,9 @@ const Home = ({ navigation }) => {
     }));
   };
 
+  //State used for refresing the page
   const [refreshing, setRefreshing] = useState(false);
+  //Sets the first subject on the list as the firs option for home page
   const [subject, setSubject] = useState(
     getSubjectOptions(user)[0]?.value || ""
   ); // Default to first subject, if available
@@ -43,6 +47,7 @@ const Home = ({ navigation }) => {
   // Get subject options using the utility function
   const subjectOptions = getSubjectOptions(user);
 
+  //Refetch connected users via a refresh, only used when obtaining info with useFirebase
   const onRefresh = async () => {
     setRefreshing(true);
     await refetch();
@@ -116,9 +121,11 @@ const Home = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  //Shadow for Andriod
   shadow: {
     elevation: 50,
   },
+  //Dropdown styles
   dropdown: {
     width: 150,
     height: 50,

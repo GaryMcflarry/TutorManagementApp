@@ -486,6 +486,7 @@ const signUp = () => {
 export default signUp;
 
 const styles = StyleSheet.create({
+  //Checkbox styles
   checkboxContainer: {
     width: "67%", // Control CheckBox width for consistency
     backgroundColor: "transparent",
@@ -499,6 +500,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     textAlign: "center", // Center-align text inside input
   },
+  //DropdownStyles
   dropdown: {
     width: 150,
     height: 50,

@@ -1,9 +1,7 @@
 import {
-  StyleSheet,
   Text,
   View,
   ScrollView,
-  TextInput,
   Alert,
 } from "react-native";
 import React, { useState } from "react";
