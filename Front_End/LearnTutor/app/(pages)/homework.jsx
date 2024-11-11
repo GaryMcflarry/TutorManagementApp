@@ -202,8 +202,6 @@ const Homework = ({ navigation }) => {
             )}
             <MenuButton handlePress={() => navigation.toggleDrawer()} />
           </View>
-
-          <ScrollView>
             <View
               className="justify-start items-center"
               style={{
@@ -242,7 +240,6 @@ const Homework = ({ navigation }) => {
                 />
               )}
             </View>
-          </ScrollView>
         </StatusBarWrapper>
     </SafeAreaView>
   );

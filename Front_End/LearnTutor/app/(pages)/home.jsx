@@ -62,7 +62,7 @@ const Home = ({ navigation }) => {
           <FlatList
             data={[user]} // Using user's own info for tutors
             renderItem={({ item }) => (
-              <View>
+              <View className="my-3">
                 <ResourceCard link={item.chatLink} />
                 <ResourceCard link={item.meetingLink} />
                 <ResourceCard tutorData={item} />
@@ -84,7 +84,7 @@ const Home = ({ navigation }) => {
               (tutor) => tutor.subject === subject // Only include tutors for the selected subject
             )}
             renderItem={({ item }) => (
-              <View>
+              <View className="my-3">
                 <ResourceCard link={item.chatLink} />
                 <ResourceCard link={item.meetingLink} />
                 <ResourceCard tutorData={item} />

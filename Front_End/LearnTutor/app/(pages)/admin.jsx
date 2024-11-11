@@ -775,7 +775,7 @@ const Admin = () => {
                       setModalVisible(false);
                     }}
                   >
-                    <Text style={styles.textStyle}>Submit</Text>
+                    <Text className="text-white font-bold">Submit</Text>
                   </TouchableOpacity>
                 )}
                 {editedUser.status === "student" && (
@@ -789,7 +789,7 @@ const Admin = () => {
                       setModalVisible(false);
                     }}
                   >
-                    <Text style={styles.textStyle}>Submit</Text>
+                    <Text className="text-white font-bold">Submit</Text>
                   </TouchableOpacity>
                 )}
               </>
