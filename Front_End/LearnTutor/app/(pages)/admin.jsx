@@ -32,6 +32,7 @@ const Admin = () => {
   //Obtaining all users for displaying:
   const [users, setUsers] = useState([]);
 
+  //Getting currently logged in user
   const { user } = useGlobalContext();
 
   //Grouping/filtering the obtained user based of their roles
@@ -487,7 +488,7 @@ const Admin = () => {
 
               setSelectedTutors(updatedTutors);
 
-              console.log("Updated Selected Tutors:", selectedTutors);
+              //console.log("Updated Selected Tutors:", selectedTutors);
             }}
           />
         )}
@@ -496,9 +497,10 @@ const Admin = () => {
   };
   //Rendering the header of the table
   const renderTableHeader = (headers) => (
-    <View style={styles.tableHeader}>
+
+    <View className="flex-row justify-between bg-secondary py-2 px-2">
       {headers.map((header, index) => (
-        <Text key={index} style={styles.headerText}>
+        <Text key={index} className="font-bold flex-1 text-center text-tertiary">
           {header}
         </Text>
       ))}
@@ -508,7 +510,7 @@ const Admin = () => {
   const currentUserEmail = user.email;
   const renderTableRow = ({ item }, fields) => (
     <TouchableOpacity
-      style={styles.tableRow}
+      className="flex-row justify-center py-2 p-2 border-b-2 border-solid border-primary"
       onPress={() => {
         // Prevent self-deletion
         if (item.email === currentUserEmail) {
@@ -518,7 +520,6 @@ const Admin = () => {
             [
               {
                 text: "OK",
-                onPress: () => console.log("Self-deletion prevented"),
               },
             ],
             { cancelable: true }
@@ -529,7 +530,7 @@ const Admin = () => {
         const options = [
           {
             text: "Cancel",
-            onPress: () => console.log("Cancel option selected"),
+            //onPress: () => console.log("Cancel option selected"),
             style: "cancel",
           },
           ...(item.status !== "admin"
@@ -537,8 +538,8 @@ const Admin = () => {
                 {
                   text: "Edit",
                   onPress: () => {
-                    console.log("Edit option selected for User ID:", item.uid);
-                    console.log("Full User Information (pre-filter):", item);
+                    //console.log("Edit option selected for User ID:", item.uid);
+                    //console.log("Full User Information (pre-filter):", item);
                     setEditedUser(item);
 
                     if (item.status === "tutor") {
@@ -575,7 +576,7 @@ const Admin = () => {
                           [
                             {
                               text: "OK",
-                              onPress: () => console.log("User deleted"),
+                              //onPress: () => console.log("User deleted"),
                             },
                           ],
                           { cancelable: true }
@@ -587,7 +588,7 @@ const Admin = () => {
                           [
                             {
                               text: "OK",
-                              onPress: () => console.log("Deletion failed"),
+                              //onPress: () => console.log("Deletion failed"),
                             },
                           ],
                           { cancelable: true }
@@ -597,7 +598,7 @@ const Admin = () => {
                   },
                   {
                     text: "No",
-                    onPress: () => console.log("No selected"),
+                    //onPress: () => console.log("No selected"),
                     style: "cancel",
                   },
                 ],
@@ -614,7 +615,7 @@ const Admin = () => {
       }}
     >
       {fields.map((field, index) => (
-        <Text key={index} style={styles.cellText}>
+        <Text key={index} className="flex-1 text-center">
           {item[field]}
         </Text>
       ))}
@@ -622,7 +623,7 @@ const Admin = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView className="flex-1">
       <Modal
         animationType="fade"
         transparent={true}
@@ -799,7 +800,7 @@ const Admin = () => {
       </Modal>
 
       <StatusBarWrapper title="Admin">
-        <View style={styles.buttonContainer}>
+        <View className="items-center p-1">
           <CustomButton
             title="Add User"
             containerStyles="h-[45px] w-[100px] items-center justify-center"
@@ -812,7 +813,7 @@ const Admin = () => {
           <ActivityIndicator size="large" color="#FEA07D" />
         ) : (
           <>
-            <Text style={styles.tableTitle}>Admins</Text>
+            <Text className="text-lg font-bold text-center my-2 text-tertiary">Admins</Text>
             <FlatList
               data={admins}
               ListHeaderComponent={() => renderTableHeader(["Email"])}
@@ -820,7 +821,7 @@ const Admin = () => {
               keyExtractor={(item) => item.uid}
               contentContainerStyle={styles.tableContainer}
             />
-            <Text style={styles.tableTitle}>Tutors</Text>
+            <Text className="text-lg font-bold text-center my-2 text-tertiary">Tutors</Text>
             <FlatList
               data={tutors}
               ListHeaderComponent={() =>
@@ -830,7 +831,7 @@ const Admin = () => {
               keyExtractor={(item) => item.uid}
               contentContainerStyle={styles.tableContainer}
             />
-            <Text style={styles.tableTitle}>Students</Text>
+            <Text className="text-lg font-bold text-center my-2 text-tertiary">Students</Text>
             <FlatList
               data={students}
               ListHeaderComponent={() =>
@@ -852,50 +853,12 @@ const Admin = () => {
 export default Admin;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  buttonContainer: {
-    alignItems: "center",
-    padding: 10,
-  },
+  //flatlist table style
   tableContainer: {
     flexGrow: 1,
     paddingHorizontal: 10,
   },
-  tableHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 10,
-    paddingHorizontal: 5,
-    elevation: 10,
-  },
-  headerText: {
-    fontWeight: "bold",
-    flex: 1,
-    textAlign: "center",
-    color: "#4F7978",
-  },
-  tableRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-    paddingHorizontal: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: "#FEA07D",
-  },
-  cellText: {
-    flex: 1,
-    textAlign: "center",
-  },
-  tableTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginTop: 15,
-    color: "#4F7978",
-  },
+  //tutor subject edt styles
   checkboxContainer: {
     width: "65%", // Control CheckBox width for consistency
     backgroundColor: "transparent",
@@ -909,6 +872,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     textAlign: "center", // Center-align text inside input
   },
+  //dropdown styles
   dropdown: {
     width: 150,
     height: 50,

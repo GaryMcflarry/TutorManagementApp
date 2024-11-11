@@ -173,7 +173,7 @@ const signUp = () => {
     const fetchTutors = async () => {
       try {
         const groupedTutors = await getAvailableTutors();
-        console.log("GroupedTutors: ", groupedTutors);
+        //console.log("GroupedTutors: ", groupedTutors);
         setAvailableSubjects(groupedTutors);
       } catch (error) {
         console.error("Failed to load tutors:", error);
@@ -185,7 +185,7 @@ const signUp = () => {
 
   // Checking how the select tutor function works - Student
   useEffect(() => {
-    console.log("Selected Tutors: ", tutors);
+    //console.log("Selected Tutors: ", tutors);
   }, [tutors]);
 
   // Function to take available tutors and make options for them to choose - student

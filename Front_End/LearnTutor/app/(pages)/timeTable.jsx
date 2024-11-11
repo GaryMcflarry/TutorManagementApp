@@ -162,7 +162,7 @@ const TimeTable = ({ navigation }) => {
 
       timeSlot.forEach((slot) => {
         const newAvailability = `${slot}, ${createdSessionId}`;
-        console.log("NEW AVAIL: ", newAvailability);
+        //console.log("NEW AVAIL: ", newAvailability);
         newAvailabilities.push(newAvailability); // Add each new slot separately
       });
 

@@ -248,6 +248,7 @@ const ResourceCard = ({ link, tutorData }) => {
 export default ResourceCard;
 
 const styles = StyleSheet.create({
+  //resource card styles
   card: {
     borderRadius: 25,
     height: 280,

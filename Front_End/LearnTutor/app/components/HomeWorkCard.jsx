@@ -12,6 +12,7 @@ import { deleteHomework } from "../../lib/firebase";
 
 const HomeWorkCard = ({ subject, homeworkItems, recipientName, userStatus }) => {
 
+  //dynamic rendering based of subject
   const getSubjectStyle = (subject) => {
     switch (subject) {
       case "Science":
@@ -26,8 +27,7 @@ const HomeWorkCard = ({ subject, homeworkItems, recipientName, userStatus }) => 
         return { cardBg: "#FFFFF", activityBg: "#FFFFFF" }; // Default color if subject does not match
     }
   };
-
-
+  //function to delete homework
   const handleDelete = (itemId) => {
     Alert.alert(
       "Confirm Deletion",
@@ -35,14 +35,14 @@ const HomeWorkCard = ({ subject, homeworkItems, recipientName, userStatus }) => 
       [
         {
           text: "Cancel",
-          onPress: () => console.log("Delete cancelled"),
+          //onPress: () => console.log("Delete cancelled"),
           style: "cancel",
         },
         {
           text: "Delete",
           onPress: () => {
             // setHomeworkItems((prevItems) => prevItems.filter(item => item.id !== itemId));
-            console.log(`Home work ID ${itemId}`);
+            //console.log(`Home work ID ${itemId}`);
 
             deleteHomework(itemId);
           }, // Call the deletion function
@@ -90,6 +90,7 @@ const HomeWorkCard = ({ subject, homeworkItems, recipientName, userStatus }) => 
 };
 
 const styles = StyleSheet.create({
+  //Homework card styles
   shadow: {
     shadowColor: "#000",
     shadowOffset: {

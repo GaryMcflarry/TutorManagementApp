@@ -19,7 +19,7 @@ exports.deleteUser = functions.https.onCall(async (data) => {
   try {
     // Delete the user from Firebase Authentication
     await admin.auth().deleteUser(userId);
-    console.log(`Successfully deleted user from Auth with ID: ${userId}`);
+    //console.log(`Successfully deleted user from Auth with ID: ${userId}`);
 
     return { success: true};
 

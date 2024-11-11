@@ -40,11 +40,12 @@ const FIREBASE_AUTH = initializeAuth(FIREBASE_APP, {
 });
 const FIREBASE_DB = getFirestore(FIREBASE_APP);
 
-// Functions to create a new users
+// Functions to create a new users (Sign-up Page)
 //=============================================================================
+//Function to create and store admin to firebase
 export const createAdmin = async (email, password, status) => {
   try {
-    console.log("Status: ", status);
+    //console.log("Status: ", status);
     // Create a new user with Firebase Authentication
     const userCredential = await createUserWithEmailAndPassword(
       FIREBASE_AUTH,
@@ -65,6 +66,7 @@ export const createAdmin = async (email, password, status) => {
     throw new Error(`Failed to create user: ${error.message}`);
   }
 };
+//Function to create and store tutor to firebase
 export const createTutor = async (
   email,
   password,
@@ -82,7 +84,7 @@ export const createTutor = async (
     );
     const userId = userCredential.user.uid;
 
-    console.log("Connections Array: ", connectionsArray);
+    //console.log("Connections Array: ", connectionsArray);
     // Add the user data to Firestore
     await setDoc(doc(FIREBASE_DB, "User", userId), {
       email: email,
@@ -100,6 +102,7 @@ export const createTutor = async (
     throw new Error(`Failed to create user: ${error.message}`);
   }
 };
+//Function to create and store student to firebase
 export const createStudent = async (
   email,
   password,
@@ -125,7 +128,7 @@ export const createStudent = async (
       })
       .filter((conn) => conn); // Remove any empty entries
 
-    console.log("Filtered Connections Array: ", filteredConnections);
+    //console.log("Filtered Connections Array: ", filteredConnections);
 
     // Add the user data to Firestore
     await setDoc(doc(FIREBASE_DB, "User", userId), {
@@ -165,7 +168,7 @@ export const login = async (email, password) => {
     throw new Error(`Failed to sign in: ${error.message}`);
   }
 };
-//Function for signing out of the application
+//Function for signing out of the application (Sign-in Page)
 export const signOut = async () => {
   try {
     await FIREBASE_AUTH.signOut();
@@ -178,11 +181,12 @@ export const signOut = async () => {
 //Functions for fetching information on users
 //=============================================================================
 
+//Function to get current logged in user details
 export const getCurrentUser = async () => {
   try {
     const currentUser = FIREBASE_AUTH.currentUser;
     if (!currentUser) {
-      console.log("No user is currently signed in");
+      //console.log("No user is currently signed in");
       return null;
     } else {
       // Fetch user document from Firestore
@@ -200,6 +204,7 @@ export const getCurrentUser = async () => {
     return null; // Return null in case of an error
   }
 };
+//Function to get connected users for logged in user
 export const getConnectedUsers = async (user) => {
   if (!user || !user.connections) return [];
 
@@ -216,7 +221,7 @@ export const getConnectedUsers = async (user) => {
           return { id: userDoc.id, subject, ...userDoc.data() };
         }
       } else {
-       // console.log(`No connection ID for subject: ${subject}`);
+        console.log(`No connection ID for subject: ${subject}`);
       }
       return null;
     });
@@ -229,13 +234,14 @@ export const getConnectedUsers = async (user) => {
   // console.log("CONNECTED USERS: ", connectedUsers)
   return connectedUsers.filter(Boolean);
 };
+//Function to get user details based of their id
 export const fetchRecipientInfo = async (userId) => {
   try {
     // Fetch user document from Firestore
     const userDoc = await getDoc(doc(FIREBASE_DB, "User", userId));
     // Check if the user document exists and return the user data
     if (userDoc.exists()) {
-      console.log("text", userDoc.data());
+      //console.log("text", userDoc.data());
       return userDoc.data(); // Return the data correctly
     } else {
       return null; // Return null if the document does not exist
@@ -244,6 +250,7 @@ export const fetchRecipientInfo = async (userId) => {
     console.error("Error fetching recipient info: ", error);
   }
 };
+//Function to get available tutor, grouped by subject
 export const getAvailableTutors = async () => {
   const subjectsWithTutors = [
     { subject: "Mathematics", selected: false, tutorIds: [], tutorNames: [] },
@@ -293,6 +300,7 @@ export const getAvailableTutors = async () => {
     throw new Error("Failed to fetch available tutors.");
   }
 };
+//Function to fetch all users by their status
 export const listenToUsers = (setUsers) => {
   // Define a query to get all users ordered by the 'status' field
   const usersQuery = query(
@@ -323,9 +331,9 @@ export const listenToUsers = (setUsers) => {
 
 //=============================================================================
 
-// functions to update user information
+// Edit Users (Admin Page)
 //=============================================================================
-
+//Helper Function to remove connection between tutor and student
 const removeStudentFromTutor = async (tutorId, subject, studentId) => {
   try {
     const tutorRef = doc(FIREBASE_DB, "User", tutorId);
@@ -345,9 +353,9 @@ const removeStudentFromTutor = async (tutorId, subject, studentId) => {
 
       // Update the tutor's document with the new connections
       await updateDoc(tutorRef, { connections: updatedConnections });
-      console.log(
-        `Updated tutor ${tutorId}: Removed student ID from subject ${subject}`
-      );
+      // console.log(
+      //   `Updated tutor ${tutorId}: Removed student ID from subject ${subject}`
+      // );
     } else {
       console.error(`Tutor document not found for ID: ${tutorId}`);
     }
@@ -355,6 +363,7 @@ const removeStudentFromTutor = async (tutorId, subject, studentId) => {
     console.error(`Error updating tutor's connections: ${error.message}`);
   }
 };
+//Function to update a users infromation to the firestore
 export const updateUser = async (
   user,
   subjects,
@@ -380,11 +389,11 @@ export const updateUser = async (
           })
           .filter((conn) => conn); // Remove any empty entries
 
-        console.log("Filtered Connections Array: ", filteredConnections);
+        //console.log("Filtered Connections Array: ", filteredConnections);
 
         const combinedConnections = [...prevConnections, ...filteredConnections];
-        console.log("Previous connections: ", prevConnections);
-        console.log("Combined Connections Array (New connections): ", combinedConnections);
+       // console.log("Previous connections: ", prevConnections);
+       // console.log("Combined Connections Array (New connections): ", combinedConnections);
 
         // Update the user record in Firebase, including additional fields
         const userRef = doc(FIREBASE_DB, "User", user.uid); // Correctly reference the document
@@ -399,7 +408,7 @@ export const updateUser = async (
         await updateTutorsConnections(filteredConnections, user.uid);
 
         if (tutorsToDelete.length > 0) {
-          console.log("Tutors to delete: ", tutorsToDelete);
+          //console.log("Tutors to delete: ", tutorsToDelete);
 
           for (const removedConnection of tutorsToDelete) {
             const [subjectForDeletion, tutorIdForDeletion] =
@@ -536,7 +545,7 @@ export const updateUser = async (
         }
       }
 
-      console.log("User updated successfully in Firebase");
+      //console.log("User updated successfully in Firebase");
       return true; // Return true if successful
     }
   } catch (error) {
@@ -544,7 +553,8 @@ export const updateUser = async (
     return false; // Return false if there was an error
   }
 };
-// Functions to update user Information
+//
+//Helper Function to update user connections
 const updateTutorsConnections = async (connectionsArray, studentId) => {
   try {
     for (const connection of connectionsArray) {
@@ -593,8 +603,9 @@ const updateTutorsConnections = async (connectionsArray, studentId) => {
 };
 //=============================================================================
 
-// Delete users
+// Delete users (Admin Page)
 //=============================================================================
+//Function to delete user from all tables in firestore, aswell using the google cloud function to delete from authentication
 export const deleteUser = async (userId) => {
   const functions = getFunctions();
   const deleteUserFunc = httpsCallable(functions, "deleteUser");
@@ -639,7 +650,7 @@ export const deleteUser = async (userId) => {
             deleteDoc(doc(FIREBASE_DB, "Homework", docSnapshot.id))
         );
         await Promise.all(deleteHomeworkPromises);
-        console.log(`All homework associated with user ${userId} deleted.`);
+        //console.log(`All homework associated with user ${userId} deleted.`);
       }
 
       //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -664,9 +675,9 @@ export const deleteUser = async (userId) => {
       ];
 
       await Promise.all(deletePromises);
-      console.log(
-        `All conversations involving user ${userId} have been deleted.`
-      );
+      // console.log(
+      //   `All conversations involving user ${userId} have been deleted.`
+      // );
 
       //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       // Delete All sessions
@@ -679,7 +690,7 @@ export const deleteUser = async (userId) => {
 
       await Promise.all(sessions.map((sessionId) => deleteSession(sessionId)));
 
-      console.log(`All sessions involving user ${userId} have been deleted.`);
+      //console.log(`All sessions involving user ${userId} have been deleted.`);
 
       //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       // Terminating All CONNECTIONS
@@ -728,7 +739,7 @@ export const deleteUser = async (userId) => {
     console.error("Error calling deleteUser function:", error.message);
   }
 };
-
+//Function to delete connections between users, and any exisitance between the two in firestore
 export const deleteAssociations = async (studentId, tutorId) => {
   try {
     // Deleting All homework where studentId and tutorId match
@@ -743,9 +754,9 @@ export const deleteAssociations = async (studentId, tutorId) => {
       deleteDoc(doc(FIREBASE_DB, "Homework", docSnapshot.id))
     );
     await Promise.all(deleteHomeworkPromises);
-    console.log(
-      `All homework associated with student ${studentId} and tutor ${tutorId} deleted.`
-    );
+    // console.log(
+    //   `All homework associated with student ${studentId} and tutor ${tutorId} deleted.`
+    // );
 
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     // Deleting All conversations where studentId or tutorId is in fromId or toId
@@ -787,9 +798,9 @@ export const deleteAssociations = async (studentId, tutorId) => {
     ];
 
     await Promise.all(deleteConversationPromises);
-    console.log(
-      `All conversations involving student ${studentId} or tutor ${tutorId} have been deleted.`
-    );
+    // console.log(
+    //   `All conversations involving student ${studentId} or tutor ${tutorId} have been deleted.`
+    // );
 
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     // Deleting All sessions where studentId and tutorId match
@@ -804,9 +815,9 @@ export const deleteAssociations = async (studentId, tutorId) => {
       (docSnapshot) => deleteSession(docSnapshot.id) // Using your deleteSession function
     );
     await Promise.all(deleteSessionPromises);
-    console.log(
-      `All sessions involving student ${studentId} and tutor ${tutorId} have been deleted.`
-    );
+    // console.log(
+    //   `All sessions involving student ${studentId} and tutor ${tutorId} have been deleted.`
+    // );
   } catch (error) {
     console.error("Error deleting associations:", error.message);
   }
@@ -814,9 +825,9 @@ export const deleteAssociations = async (studentId, tutorId) => {
 
 //=============================================================================
 
-// Sending Functionality
+// Sending Functionality (Conversation / [query] page)
 //=============================================================================
-//Functions for dealing with messaging (Conversation / [query] page)
+//Functions for submitting messages to firestore 
 export const sendMessage = async (fromId, toId, messageContent) => {
   try {
     const newMessageRef = doc(FIREBASE_DB, "Conversations", generateId()); // Generate a new message ID
@@ -826,7 +837,7 @@ export const sendMessage = async (fromId, toId, messageContent) => {
       timeStamp: serverTimestamp(), // Set server-side timestamp
       toId: toId,
     });
-    console.log("Message sent successfully!");
+    //console.log("Message sent successfully!");
   } catch (error) {
     console.error("Error sending message: ", error);
   }
@@ -835,6 +846,7 @@ export const sendMessage = async (fromId, toId, messageContent) => {
 const generateId = () => {
   return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
+//Function to fetch messages from firestore
 export const fetchMessages = (userId, recipientId, setMessages) => {
   const messagesRef = collection(FIREBASE_DB, "Conversations");
 
@@ -909,10 +921,10 @@ export const fetchMessages = (userId, recipientId, setMessages) => {
 
 //=============================================================================
 
-// Homework functionality
+// Homework functionality (Homework Page)
 //=============================================================================
 
-//Functions for dealing with homework (Homework page)
+//Functions for submmiting homework to firestore
 export const submittingHomework = async (
   studId,
   tutorId,
@@ -934,6 +946,7 @@ export const submittingHomework = async (
     console.error("Error sending message: ", error);
   }
 };
+//Function for fetching homework based of user id, role, and group them together
 export const fetchHomework = (userId, userRole, setGroupedHomework) => {
   const homeworkRef = collection(FIREBASE_DB, "Homework");
   const homeworkForId = query(
@@ -972,6 +985,7 @@ export const fetchHomework = (userId, userRole, setGroupedHomework) => {
     setGroupedHomework(groupedHomework);
   });
 };
+//function for deleting homework from firestore
 export const deleteHomework = async (itemId) => {
   try {
     // Get a reference to the specific document within the Homework collection
@@ -986,9 +1000,10 @@ export const deleteHomework = async (itemId) => {
 };
 //=============================================================================
 
-//Schedule Functionality
+//Schedule Functionality (Timetable Page)
 ////=============================================================================
 
+//function to fetch sessions based of user id, and role and group them together
 export const fetchSessions = async (userId, userRole, setGroupedSessions) => {
   const sessionRef = collection(FIREBASE_DB, "Session");
   const sessionForId = query(
@@ -1023,10 +1038,11 @@ export const fetchSessions = async (userId, userRole, setGroupedSessions) => {
     }, {});
 
     // Set the grouped sessions
-    console.log("Grouped Sessions by ID:", groupedSessions);
+    //console.log("Grouped Sessions by ID:", groupedSessions);
     setGroupedSessions(groupedSessions);
   });
 };
+//function for submitting session to firestore
 export const submittingSession = async (
   submitId,
   toId,
@@ -1095,7 +1111,7 @@ export const submittingSession = async (
     // Wait for all availability updates to complete
     await Promise.all(updatedAvailabilityPromises);
 
-    console.log("Session submitted and availability updated successfully!");
+    //console.log("Session submitted and availability updated successfully!");
     
     // Return the generated session ID
     return sessionId;
@@ -1105,6 +1121,7 @@ export const submittingSession = async (
     throw error; // Re-throw error if needed for handling in calling function
   }
 };
+//function for deleting session from firestore
 export const deleteSession = async (sessionId) => {
   try {
     // Get a reference to the specific document within the Session collection
@@ -1147,13 +1164,14 @@ export const deleteSession = async (sessionId) => {
       // Wait for all availability updates to complete
       await Promise.all(updatedAvailabilityPromises);
 
-      console.log("Session deleted and availability updated successfully!");
+      //console.log("Session deleted and availability updated successfully!");
     } else {
-      console.log("Session not found.");
+      //console.log("Session not found.");
     }
   } catch (error) {
     console.error("Error deleting session: ", error);
     return false; // Optionally return false to indicate failure
   }
 };
+
 //=============================================================================

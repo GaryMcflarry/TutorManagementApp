@@ -1,18 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Card, Text } from "@rneui/themed";
 import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
-import { listenToSessionDetails, deleteSession } from "../../lib/firebase";
+import { deleteSession } from "../../lib/firebase";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import { Dimensions } from 'react-native';
 const screenWidth = Dimensions.get('window').width;
 
 const TimeTableCard = ({ sessionId, time, sessionDetails, day }) => {
   const { user, setUser } = useGlobalContext();
-
-
-
-
-
 
   // Dynamic background colors based on subject
   const backgroundColors = {
@@ -33,9 +28,6 @@ const TimeTableCard = ({ sessionId, time, sessionDetails, day }) => {
     return backgroundColors.default; // Return default if sessionDetails is null or subject is missing
   };
 
-  // console.log("Card ID :", sessionId);
-  // console.log("Card Time :", time);
-  // console.log("Card Details :", sessionDetails);
 
   if (!sessionId || !sessionDetails) {
     return (
@@ -121,6 +113,7 @@ const TimeTableCard = ({ sessionId, time, sessionDetails, day }) => {
 };
 
 const styles = StyleSheet.create({
+  //card style
   card: {
     borderRadius: 20,
     padding: 0,
@@ -130,6 +123,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     elevation: 10,
   },
+  //card header style
   header: {
     borderTopLeftRadius: 17,
     borderTopRightRadius: 17,
@@ -138,24 +132,28 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     elevation: 5,
   },
+  //card time style
   time: {
     margin: 5,
     color: "white",
     fontSize: 12,
     fontWeight: "bold",
   },
+  //card subject style
   subject: {
     margin: 5,
     color: "white",
     fontSize: 12,
     fontWeight: "bold",
   },
+  //card fullname style
   fullname: {
     color: "white",
     fontSize: 18,
     fontWeight: "bold",
     textAlign: "center",
   },
+  //card no session style
   noSession: {
     backgroundColor: "#d3d3d3", // light grey for no session
   },
