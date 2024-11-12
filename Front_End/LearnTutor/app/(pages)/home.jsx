@@ -1,6 +1,13 @@
-import { StyleSheet, View, FlatList, RefreshControl, Text } from "react-native";
+import {
+  StyleSheet,
+  View,
+  FlatList,
+  RefreshControl,
+  Text,
+  Alert,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import StatusBarWrapper from "../components/statusBar";
 import MenuButton from "../components/MenuButton";
 import ResourceCard from "../components/ResourceCard";
@@ -8,14 +15,54 @@ import { useGlobalContext } from "../../context/GlobalProvider";
 import { getConnectedUsers } from "../../lib/firebase";
 import useFirebase from "../../lib/useFirebase";
 import { Dropdown } from "react-native-element-dropdown";
+import { router } from "expo-router";
 
 const Home = ({ navigation }) => {
   //Obtaining currently logged in user
-  const { user } = useGlobalContext();
+  const { user, setUser } = useGlobalContext();
   //Fetching users via connections array
   const { data: userInfo, refetch } = useFirebase(() =>
     getConnectedUsers(user)
   );
+
+  useEffect(() => {
+    if (!user || !user.connections || user.connections.length === 0) {
+      Alert.alert(
+        "Error",
+        "User has no connections",
+        [
+          {
+            text: "OK",
+            onPress: () => router.replace("sign-in"),
+          },
+        ],
+        { cancelable: true }
+      );
+    } else {
+      // Update connections state based on valid user connections
+      const newConnections = user.connections.reduce((acc, connection) => {
+        const [subject, userId] = connection.split(" ");
+        if (userId) {
+          acc.push(userId); // Add userId to the accumulator
+        }
+        return acc;
+      }, []);
+
+      if (newConnections.length === 0) {
+        Alert.alert(
+          "Error",
+          "User has no connections",
+          [
+            {
+              text: "OK",
+              onPress: () => router.replace("sign-in"),
+            },
+          ],
+          { cancelable: true }
+        );
+      }
+    }
+  }, [user]);
 
   // Utility function to convert subjects in `connections` into { label, value } format
   const getSubjectOptions = (user) => {
