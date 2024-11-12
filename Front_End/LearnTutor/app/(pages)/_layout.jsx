@@ -22,7 +22,7 @@ const _layout = () => {
         screenOptions={{
           drawerStyle: {
             backgroundColor: '#FEA07D',
-            width: 180,
+            width: 200,
           },
           drawerPosition: 'right',
           drawerType: 'front',
