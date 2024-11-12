@@ -32,11 +32,11 @@ const Home = ({ navigation }) => {
         "User has no connections",
         [
           {
-            text: "OK",
+            text: "Log out",
             onPress: () => router.replace("sign-in"),
           },
         ],
-        { cancelable: true }
+        { cancelable: false }
       );
     } else {
       // Update connections state based on valid user connections
@@ -54,11 +54,11 @@ const Home = ({ navigation }) => {
           "User has no connections",
           [
             {
-              text: "OK",
+              text: "Log out",
               onPress: () => router.replace("sign-in"),
             },
           ],
-          { cancelable: true }
+          { cancelable: false }
         );
       }
     }

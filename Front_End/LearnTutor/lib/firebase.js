@@ -217,7 +217,7 @@ export const getConnectedUsers = async (user) => {
       if (userId) {
         const userDoc = await getDoc(doc(FIREBASE_DB, "User", userId));
         if (userDoc.exists()) {
-         // console.log("CONNECTED USER:", userDoc.data());
+          // console.log("CONNECTED USER:", userDoc.data());
           return { id: userDoc.id, subject, ...userDoc.data() };
         }
       } else {
@@ -391,9 +391,12 @@ export const updateUser = async (
 
         //console.log("Filtered Connections Array: ", filteredConnections);
 
-        const combinedConnections = [...prevConnections, ...filteredConnections];
-       // console.log("Previous connections: ", prevConnections);
-       // console.log("Combined Connections Array (New connections): ", combinedConnections);
+        const combinedConnections = [
+          ...prevConnections,
+          ...filteredConnections,
+        ];
+        // console.log("Previous connections: ", prevConnections);
+        // console.log("Combined Connections Array (New connections): ", combinedConnections);
 
         // Update the user record in Firebase, including additional fields
         const userRef = doc(FIREBASE_DB, "User", user.uid); // Correctly reference the document
@@ -563,7 +566,7 @@ const updateTutorsConnections = async (connectionsArray, studentId) => {
       // If tutorId exists, update their connections
       if (tutorId) {
         const tutorDocRef = doc(FIREBASE_DB, "User", tutorId);
-        
+
         // Get the current tutor's data
         const tutorSnap = await getDoc(tutorDocRef);
         if (tutorSnap.exists()) {
@@ -588,12 +591,9 @@ const updateTutorsConnections = async (connectionsArray, studentId) => {
           }
 
           // Update tutor's document in Firestore
-          await updateDoc(
-            tutorDocRef,
-            {
-              connections: existingConnections,
-            },
-          ); // Use merge to avoid overwriting other fields
+          await updateDoc(tutorDocRef, {
+            connections: existingConnections,
+          }); // Use merge to avoid overwriting other fields
         }
       }
     }
@@ -811,10 +811,11 @@ export const deleteAssociations = async (studentId, tutorId) => {
     );
 
     const sessionSnapshot = await getDocs(sessionQuery);
-    const deleteSessionPromises = sessionSnapshot.docs.map(
-      (docSnapshot) => deleteSession(docSnapshot.id) // Using your deleteSession function
-    );
-    await Promise.all(deleteSessionPromises);
+    // Since deleteSession is assumed to be an asynchronous function, use a for...of loop
+    for (const docSnapshot of sessionSnapshot.docs) {
+      await deleteSession(docSnapshot.id);
+    }
+
     // console.log(
     //   `All sessions involving student ${studentId} and tutor ${tutorId} have been deleted.`
     // );
@@ -827,7 +828,7 @@ export const deleteAssociations = async (studentId, tutorId) => {
 
 // Sending Functionality (Conversation / [query] page)
 //=============================================================================
-//Functions for submitting messages to firestore 
+//Functions for submitting messages to firestore
 export const sendMessage = async (fromId, toId, messageContent) => {
   try {
     const newMessageRef = doc(FIREBASE_DB, "Conversations", generateId()); // Generate a new message ID
@@ -1112,10 +1113,9 @@ export const submittingSession = async (
     await Promise.all(updatedAvailabilityPromises);
 
     //console.log("Session submitted and availability updated successfully!");
-    
+
     // Return the generated session ID
     return sessionId;
-
   } catch (error) {
     console.error("Error submitting session: ", error);
     throw error; // Re-throw error if needed for handling in calling function
@@ -1124,10 +1124,7 @@ export const submittingSession = async (
 //function for deleting session from firestore
 export const deleteSession = async (sessionId) => {
   try {
-    // Get a reference to the specific document within the Session collection
     const sessionDocRef = doc(FIREBASE_DB, "Session", sessionId);
-
-    // Fetch the session document to obtain student and tutor IDs
     const sessionDoc = await getDoc(sessionDocRef);
 
     if (sessionDoc.exists()) {
@@ -1137,8 +1134,8 @@ export const deleteSession = async (sessionId) => {
       // Delete the session document
       await deleteDoc(sessionDocRef);
 
-      // Update availability for both the student and the tutor
-      const updatedAvailabilityPromises = userIds.map(async (userId) => {
+      // Sequentially update availability for both the student and the tutor
+      for (const userId of userIds) {
         const userDocRef = doc(FIREBASE_DB, "User", userId);
         const userDoc = await getDoc(userDocRef);
 
@@ -1146,8 +1143,8 @@ export const deleteSession = async (sessionId) => {
           const userData = userDoc.data();
           // Filter out availability entries containing the session ID
           const updatedAvailability = userData.availability.filter((slot) => {
-            const parts = slot.split(", "); // Split by ", " to separate day, time, and sessionId
-            return parts.length < 3 || parts[2] !== sessionId; // Keep entries not matching the sessionId
+            const parts = slot.split(", ");
+            return parts.length < 3 || parts[2] !== sessionId;
           });
 
           // Update the user document with the new availability
@@ -1157,21 +1154,18 @@ export const deleteSession = async (sessionId) => {
               availability: updatedAvailability,
             },
             { merge: true }
-          ); // Use merge to retain existing data
+          );
         }
-      });
-
-      // Wait for all availability updates to complete
-      await Promise.all(updatedAvailabilityPromises);
-
-      //console.log("Session deleted and availability updated successfully!");
+      }
     } else {
-      //console.log("Session not found.");
+      // Optional: Handle session not found
+      console.warn("Session not found.");
     }
   } catch (error) {
     console.error("Error deleting session: ", error);
-    return false; // Optionally return false to indicate failure
+    return false;
   }
 };
+
 
 //=============================================================================
