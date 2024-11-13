@@ -4,6 +4,7 @@ import {
   View,
   TouchableOpacity,
   Image,
+  Alert,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useGlobalContext } from "../../context/GlobalProvider";
@@ -13,7 +14,7 @@ import { router } from "expo-router";
 
 const StatusBarWrapper = ({ children, title }) => {
   //getting global state of user from the global provider
-  const {setIsLoggedIn } = useGlobalContext();
+  const {setIsLoggedIn, setUser } = useGlobalContext();
 
   //function to log out user
   const logout = async () => {
@@ -24,7 +25,9 @@ const StatusBarWrapper = ({ children, title }) => {
     //removes the data of the current logged in user
     // setUser(null);
     //sets the state establishing that no user is logged in anymore
+    setUser(null);
     setIsLoggedIn(false);
+    Alert.alert("You Have logged out!")
   };
 
   return (
