@@ -173,7 +173,7 @@ const signUp = () => {
     const fetchTutors = async () => {
       try {
         const groupedTutors = await getAvailableTutors();
-        console.log("GroupedTutors: ", groupedTutors);
+        //console.log("GroupedTutors: ", groupedTutors);
         setAvailableSubjects(groupedTutors);
       } catch (error) {
         console.error("Failed to load tutors:", error);
@@ -185,7 +185,7 @@ const signUp = () => {
 
   // Checking how the select tutor function works - Student
   useEffect(() => {
-    console.log("Selected Tutors: ", tutors);
+    //console.log("Selected Tutors: ", tutors);
   }, [tutors]);
 
   // Function to take available tutors and make options for them to choose - student
@@ -234,7 +234,7 @@ const signUp = () => {
             className="bg-tertiary border-none rounded-lg p-5 items-center"
             style={styles.shadow}
           >
-            <View className="w-[300px] h-[30px] flex-row justify-end items-center">
+            <View className="w-[90%] h-[30px] flex-row justify-end items-center">
               <TouchableOpacity
                 style={styles.shadow}
                 onPress={() => {
@@ -250,7 +250,7 @@ const signUp = () => {
                   setAvailableSubjects([...availableSubjects]); // Update state
                 }}
               >
-                <Text style={styles.textStyle} className="text-lg text-white">
+                <Text className="text-xl text-white">
                   X
                 </Text>
               </TouchableOpacity>
@@ -322,12 +322,11 @@ const signUp = () => {
                   handleChangeText={(text) => setAddress(text)}
                 />
 
-                <View className="w-full p-3">
                   {availableSubjects.map((subjectObj, index) => (
                     <View key={index}>
-                      <View className="flex-row items-center justify-between w-[90%]">
+                      <View className="flex-row items-center justify-center w-[90%]">
                         {/* Display the subject name directly */}
-                        <Text className="text-base text-white">
+                        <Text className="text-base text-white mx-5">
                           {subjectObj.subject}
                         </Text>
 
@@ -373,7 +372,6 @@ const signUp = () => {
                       </View>
                     </View>
                   ))}
-                </View>
               </>
             )}
             {loading ? (
@@ -382,7 +380,7 @@ const signUp = () => {
               <>
                 {status === "tutor" && (
                   <TouchableOpacity
-                    className={`bg-primary p-3 border-none rounded-xl mt-10 ${
+                    className={`bg-primary p-3 border-none rounded-xl mt-1 ${
                       !isFormValid(status) ? "opacity-50" : ""
                     }`}
                     style={styles.shadow}
@@ -395,7 +393,7 @@ const signUp = () => {
                 )}
                 {status === "student" && (
                   <TouchableOpacity
-                    className={`bg-primary p-3 border-none rounded-xl mt-10 ${
+                    className={`bg-primary p-3 border-none rounded-xl mt-2 ${
                       !isFormValid(status) ? "opacity-50" : ""
                     }`}
                     style={styles.shadow}
@@ -488,6 +486,7 @@ const signUp = () => {
 export default signUp;
 
 const styles = StyleSheet.create({
+  //Checkbox styles
   checkboxContainer: {
     width: "67%", // Control CheckBox width for consistency
     backgroundColor: "transparent",
@@ -501,14 +500,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     textAlign: "center", // Center-align text inside input
   },
+  //DropdownStyles
   dropdown: {
     width: 150,
     height: 50,
-    borderColor: "gray",
+    borderColor: "white",
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 8,
     backgroundColor: "#4F7978", // Dropdown background color
+    marginHorizontal: 10,
+    marginVertical: 5
   },
   placeholderStyle: {
     color: "#FFFFFF", // Placeholder text color

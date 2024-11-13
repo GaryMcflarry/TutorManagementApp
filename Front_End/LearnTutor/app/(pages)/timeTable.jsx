@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   Modal,
   TouchableOpacity,
-  RefreshControl,
   Alert,
 } from "react-native";
 import React, { useEffect, useState, useMemo } from "react";
@@ -27,6 +26,8 @@ import { Dropdown } from "react-native-element-dropdown";
 import useFirebase from "../../lib/useFirebase";
 
 const TimeTable = ({ navigation }) => {
+
+  //Setting the days of the week
   const days = [
     "Monday",
     "Tuesday",
@@ -36,18 +37,27 @@ const TimeTable = ({ navigation }) => {
     "Saturday",
   ];
 
+  //Obtaining the current logged in user, with obtion to edit their availability
   const { user, setUser } = useGlobalContext();
 
-  const [refreshing, setRefreshing] = useState(false);
+  //Setting loading state
   const [loading, setLoading] = useState(true);
+  //Dialog display
   const [modalVisible, setModalVisible] = useState(false);
+  //Setting the selected user with dropdown
   const [selectedUser, setSelectedUser] = useState("");
+  //Setting the selected user id
   const [selectedUserId, setSelectedUserId] = useState("");
+  //grouping the fetched sessions via subjects
   const [groupedSession, setGroupedSession] = useState({});
+  //Setting the subject for session, via connected subject
   const [subject, setSubject] = useState("");
+  //setting the selected timeslots
   const [timeSlot, setTimeslot] = useState([]);
+  //Setting whether the session is online or in person
   const [type, setType] = useState("");
 
+  //Setting the timeslots for display on page and dialog
   const timeRanges = useMemo(() => {
     const startHour = 8;
     const endHour = 16;
@@ -61,6 +71,7 @@ const TimeTable = ({ navigation }) => {
     return ranges;
   }, []);
 
+  //Fetching all sessions connected to the user via availibility array
   useEffect(() => {
     // Call fetchSessions and store the unsubscribe function
     setLoading(true);
@@ -74,18 +85,14 @@ const TimeTable = ({ navigation }) => {
     };
   }, []);
 
+  //Fetching the connected users via the useFirebase, for dropdown options, no refresh required
   const { data: userInfo, refetch } = useFirebase(() =>
     getConnectedUsers(user)
   );
 
-  console.log("USER INFO: ", userInfo);
+  //console.log("USER INFO: ", userInfo);
 
-  // const onRefresh = async () => {
-  //   setRefreshing(true);
-  //   await refetch();
-  //   setRefreshing(false);
-  // };
-
+  // Utility function to convert subjects in `connections` into { label, value } format
   const getUserOptions = (users) => {
     if (!Array.isArray(users) || users.length === 0) return [];
     let options = [];
@@ -103,14 +110,17 @@ const TimeTable = ({ navigation }) => {
 
   const userOptions = getUserOptions(userInfo);
 
+
+  //obtaining the avaialibilty of the user that is selected in the dropdown
   const selectedUseForAvail = selectedUserId
     ? userInfo.find((user) => user.id === selectedUserId)
     : undefined;
-
   const combinedAvailability = selectedUseForAvail
     ? user.availability.concat(selectedUseForAvail.availability)
     : user.availability;
 
+
+  //Function to submit session
   const submitSession = async () => {
     try {
       let createdSessionId;
@@ -152,7 +162,7 @@ const TimeTable = ({ navigation }) => {
 
       timeSlot.forEach((slot) => {
         const newAvailability = `${slot}, ${createdSessionId}`;
-        console.log("NEW AVAIL: ", newAvailability);
+        //console.log("NEW AVAIL: ", newAvailability);
         newAvailabilities.push(newAvailability); // Add each new slot separately
       });
 
@@ -186,7 +196,7 @@ const TimeTable = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView className="flex-1 bg-secondary">
       <StatusBarWrapper title="Timetable">
         <Modal
           animationType="fade"
@@ -211,7 +221,7 @@ const TimeTable = ({ navigation }) => {
                     setType("");
                   }}
                 >
-                  <Text style={styles.textStyle} className="text-lg md:text-2xl">
+                  <Text className="text-white font-bold text-lg md:text-2xl">
                     X
                   </Text>
                 </TouchableOpacity>
@@ -358,7 +368,7 @@ const TimeTable = ({ navigation }) => {
                   style={styles.shadow}
                   onPress={submitSession}
                 >
-                  <Text style={styles.textStyle}>Submit</Text>
+                  <Text className="text-white font-bold">Submit</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -377,7 +387,7 @@ const TimeTable = ({ navigation }) => {
         ) : (
           <PagerView style={{ flex: 1, width: '100%' }} initialPage={0}>
             {days.map((day) => (
-              <View key={day} style={styles.page}>
+              <View key={day}>
                 <View className="flex-row justify-between items-center px-4">
                   <Icon name="chevron-back-outline" color="#4F7978" size={50} />
                   <Text className="text-xl mx-8 font-semibold text-[#4F7978]">
@@ -434,16 +444,14 @@ const TimeTable = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
+  //Dialog avaialability
   page: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 16,
   },
+  //Dropdown Styles
   dropdown: {
     width: 300,
     height: 50,
@@ -469,11 +477,7 @@ const styles = StyleSheet.create({
   iconStyle: {
     tintColor: "#FFFFFF",
   },
-  textStyle: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center",
-  },
+  //timeslot selector styles
   timeSlotContainer: {
     width: "100%",
     paddingVertical: 10,

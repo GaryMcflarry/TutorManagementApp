@@ -2,21 +2,20 @@ import {
   StyleSheet,
   Text,
   View,
-  ScrollView,
   TouchableOpacity,
   Image,
 } from "react-native";
-import { Children } from "react";
 import { StatusBar } from "expo-status-bar";
 import { useGlobalContext } from "../../context/GlobalProvider";
-import { icons, images } from "../../constants";
+import { icons } from "../../constants";
 import { signOut } from "../../lib/firebase";
 import { router } from "expo-router";
 
 const StatusBarWrapper = ({ children, title }) => {
   //getting global state of user from the global provider
-  const { user, setUser, setIsLoggedIn } = useGlobalContext();
+  const {setIsLoggedIn } = useGlobalContext();
 
+  //function to log out user
   const logout = async () => {
     //appwrite function occurs to remove the session
     await signOut();
@@ -51,6 +50,7 @@ const StatusBarWrapper = ({ children, title }) => {
 };
 
 const styles = StyleSheet.create({
+  //For andriod
   shadow: {
     elevation: 20,
   },

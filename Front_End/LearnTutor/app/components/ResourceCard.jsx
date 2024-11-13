@@ -3,6 +3,7 @@ import { Card } from "@rneui/themed";
 import React from "react";
 import { Button } from "@rneui/base";
 import { icons } from "../../constants";
+import { router } from "expo-router";
 
 const ResourceCard = ({ link, tutorData }) => {
   // Determine which card to render based on the link
@@ -34,7 +35,7 @@ const ResourceCard = ({ link, tutorData }) => {
               color={"#E6C11D"}
               containerStyle={{ borderRadius: 15, width: 130 }}
               style={[styles.button]}
-              onPress={() => {}}
+              onPress={() => {router.push("/home")}}
             >
               Link Here
             </Button>
@@ -248,6 +249,7 @@ const ResourceCard = ({ link, tutorData }) => {
 export default ResourceCard;
 
 const styles = StyleSheet.create({
+  //resource card styles
   card: {
     borderRadius: 25,
     height: 280,

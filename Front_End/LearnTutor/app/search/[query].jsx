@@ -25,7 +25,7 @@ import {
   fetchRecipientInfo,
 } from "../../lib/firebase";
 import useFirebase from "../../lib/useFirebase";
-import Icon from 'react-native-vector-icons/Ionicons';
+import Icon from "react-native-vector-icons/Ionicons";
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
@@ -54,7 +54,7 @@ const Chat = () => {
       sendMessage(user.uid, query, newMessage).then(() => {
         isSending.current = false; // Mark as not sending after send is successful
         setNewMessage(""); // Clear input
-  
+
         // Scroll to the end if the message was sent successfully
         if (!isSending.current) {
           scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -79,7 +79,7 @@ const Chat = () => {
                 navigation.goBack();
               }}
             >
-              <Icon name="arrow-back-outline" color="#4F7978" size={50}/>
+              <Icon name="arrow-back-outline" color="#4F7978" size={50} />
             </TouchableOpacity>
           </View>
           <View className="flex-1 w-full">
@@ -95,22 +95,26 @@ const Chat = () => {
                 ref={scrollViewRef} // Reference for the ScrollView
                 contentContainerStyle={{ flexGrow: 1 }}
                 showsVerticalScrollIndicator={false}
-                onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })} // Scroll to bottom on content size change
+                onContentSizeChange={() =>
+                  scrollViewRef.current?.scrollToEnd({ animated: true })
+                } // Scroll to bottom on content size change
               >
-                {messages.map((msg) => {
-                  // Ensure the ChatBubble is rendered correctly
-                  const messageTime = msg.timeStamp?.toDate(); // Convert Firestore timestamp to JavaScript Date
-                  const formattedTime = messageTime?.toLocaleTimeString(); // Format the time as needed
+                {messages
+                  .slice()
+                  .map((msg) => {
+                    // Render ChatBubble components as before
+                    const messageTime = msg.timeStamp?.toDate(); // Convert Firestore timestamp to JavaScript Date
+                    const formattedTime = messageTime?.toLocaleTimeString(); // Format the time as needed
 
-                  return (
-                    <ChatBubble
-                      key={msg.id} // Ensure each message has a unique key
-                      time={formattedTime} // Pass the formatted time
-                      message={msg.message}
-                      isSender={msg.fromId === user.uid} // Check if the user is the sender
-                    />
-                  );
-                })}
+                    return (
+                      <ChatBubble
+                        key={msg.id} // Ensure each message has a unique key
+                        time={formattedTime} // Pass the formatted time
+                        message={msg.message}
+                        isSender={msg.fromId === user.uid} // Check if the user is the sender
+                      />
+                    );
+                  })}
               </ScrollView>
             </View>
             {/* Align FormField and CustomButton */}

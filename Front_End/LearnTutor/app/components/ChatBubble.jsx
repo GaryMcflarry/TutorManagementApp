@@ -44,8 +44,9 @@ const ChatBubble = ({ message, time, isSender }) => {
 
 // Styles for the chat bubble and other elements
 const styles = StyleSheet.create({
+  //Bubble styles
   bubbleContainer: {
-    maxWidth: '80%', // Allow the text to take up more space in the bubble
+    maxWidth: '80%', 
     marginVertical: 2,
   },
   chatBubble: {
@@ -54,11 +55,11 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   senderBubble: {
-    backgroundColor: '#4F7978', // Example color for sender's bubble
+    backgroundColor: '#4F7978',
     borderBottomLeftRadius: 4,
   },
   receiverBubble: {
-    backgroundColor: '#FEA07D' , // Example color for receiver's bubble
+    backgroundColor: '#FEA07D' , 
     borderBottomRightRadius: 4,
   },
   bubbleTip: {

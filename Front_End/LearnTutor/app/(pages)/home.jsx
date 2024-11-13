@@ -1,6 +1,13 @@
-import { StyleSheet, View, FlatList, RefreshControl, Text } from "react-native";
+import {
+  StyleSheet,
+  View,
+  FlatList,
+  RefreshControl,
+  Text,
+  Alert,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import StatusBarWrapper from "../components/statusBar";
 import MenuButton from "../components/MenuButton";
 import ResourceCard from "../components/ResourceCard";
@@ -8,12 +15,54 @@ import { useGlobalContext } from "../../context/GlobalProvider";
 import { getConnectedUsers } from "../../lib/firebase";
 import useFirebase from "../../lib/useFirebase";
 import { Dropdown } from "react-native-element-dropdown";
+import { router } from "expo-router";
 
 const Home = ({ navigation }) => {
-  const { user } = useGlobalContext();
+  //Obtaining currently logged in user
+  const { user, setUser } = useGlobalContext();
+  //Fetching users via connections array
   const { data: userInfo, refetch } = useFirebase(() =>
     getConnectedUsers(user)
   );
+
+  useEffect(() => {
+    if (!user || !user.connections || user.connections.length === 0) {
+      Alert.alert(
+        "Error",
+        "User has no connections",
+        [
+          {
+            text: "Log out",
+            onPress: () => router.replace("sign-in"),
+          },
+        ],
+        { cancelable: false }
+      );
+    } else {
+      // Update connections state based on valid user connections
+      const newConnections = user.connections.reduce((acc, connection) => {
+        const [subject, userId] = connection.split(" ");
+        if (userId) {
+          acc.push(userId); // Add userId to the accumulator
+        }
+        return acc;
+      }, []);
+
+      if (newConnections.length === 0) {
+        Alert.alert(
+          "Error",
+          "User has no connections",
+          [
+            {
+              text: "Log out",
+              onPress: () => router.replace("sign-in"),
+            },
+          ],
+          { cancelable: false }
+        );
+      }
+    }
+  }, [user]);
 
   // Utility function to convert subjects in `connections` into { label, value } format
   const getSubjectOptions = (user) => {
@@ -35,7 +84,9 @@ const Home = ({ navigation }) => {
     }));
   };
 
+  //State used for refresing the page
   const [refreshing, setRefreshing] = useState(false);
+  //Sets the first subject on the list as the firs option for home page
   const [subject, setSubject] = useState(
     getSubjectOptions(user)[0]?.value || ""
   ); // Default to first subject, if available
@@ -43,6 +94,7 @@ const Home = ({ navigation }) => {
   // Get subject options using the utility function
   const subjectOptions = getSubjectOptions(user);
 
+  //Refetch connected users via a refresh, only used when obtaining info with useFirebase
   const onRefresh = async () => {
     setRefreshing(true);
     await refetch();
@@ -57,7 +109,7 @@ const Home = ({ navigation }) => {
           <FlatList
             data={[user]} // Using user's own info for tutors
             renderItem={({ item }) => (
-              <View>
+              <View className="my-3">
                 <ResourceCard link={item.chatLink} />
                 <ResourceCard link={item.meetingLink} />
                 <ResourceCard tutorData={item} />
@@ -79,7 +131,7 @@ const Home = ({ navigation }) => {
               (tutor) => tutor.subject === subject // Only include tutors for the selected subject
             )}
             renderItem={({ item }) => (
-              <View>
+              <View className="my-3">
                 <ResourceCard link={item.chatLink} />
                 <ResourceCard link={item.meetingLink} />
                 <ResourceCard tutorData={item} />
@@ -116,9 +168,11 @@ const Home = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  //Shadow for Andriod
   shadow: {
     elevation: 50,
   },
+  //Dropdown styles
   dropdown: {
     width: 150,
     height: 50,
