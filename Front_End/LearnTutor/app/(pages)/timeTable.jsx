@@ -20,13 +20,13 @@ import {
   getConnectedUsers,
   submittingSession,
   fetchSessions,
+  getCurrentUser,
 } from "../../lib/firebase";
 import Icon from "react-native-vector-icons/Ionicons";
 import { Dropdown } from "react-native-element-dropdown";
 import useFirebase from "../../lib/useFirebase";
 
 const TimeTable = ({ navigation }) => {
-
   //Setting the days of the week
   const days = [
     "Monday",
@@ -57,6 +57,8 @@ const TimeTable = ({ navigation }) => {
   //Setting whether the session is online or in person
   const [type, setType] = useState("");
 
+  const [userInfo, setUserInfo] = useState(getConnectedUsers(user));
+
   //Setting the timeslots for display on page and dialog
   const timeRanges = useMemo(() => {
     const startHour = 8;
@@ -71,24 +73,74 @@ const TimeTable = ({ navigation }) => {
     return ranges;
   }, []);
 
-  //Fetching all sessions connected to the user via availibility array
+  // First effect: Fetch user and sessions together
   useEffect(() => {
-    // Call fetchSessions and store the unsubscribe function
-    setLoading(true);
-    const unsubscribe = fetchSessions(user.uid, user.status, setGroupedSession);
-    //console.log("Current logged in user: ", user);
-    setLoading(false);
-    return () => {
-      if (typeof unsubscribe === "function") {
-        unsubscribe(); // Call unsubscribe if it's a function
+    // Declare unsubscribe outside of the fetchData function to ensure it's accessible in the cleanup
+    let unsubscribe;
+
+    const fetchData = async () => {
+      try {
+        setLoading(true); // Indicate loading start
+
+        // Fetch the current user
+        const currentUser = await getCurrentUser();
+        console.log(currentUser);
+
+        setUser(currentUser); // Update the user state
+
+        if (currentUser) {
+          // Ensure that we have a valid user before fetching sessions
+          // Fetch sessions and store the unsubscribe function
+          unsubscribe = fetchSessions(
+            currentUser.uid,
+            currentUser.status,
+            setGroupedSession
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching user or sessions:", error);
+      } finally {
+        setLoading(false); // Stop loading when everything is done
       }
     };
-  }, []);
 
+    // Call fetchData to fetch user and sessions
+    fetchData();
+
+    // Cleanup function to unsubscribe when component unmounts or dependencies change
+    return () => {
+      if (unsubscribe) {
+        unsubscribe(); // Make sure to unsubscribe if the unsubscribe function exists
+      }
+    };
+  }, []); // Empty dependency array ensures this effect runs only once when the component mounts
+
+  // Second effect: Update current user info when groupedSession changes
+  useEffect(() => {
+    if (groupedSession) {
+      const updateUser = async () => {
+        try {
+          setLoading(true); // Indicate loading start
+          // Fetch the current user again when groupedSession updates
+          const currentUser = await getCurrentUser();
+          //console.log(currentUser);
+
+          setUser(currentUser); // Update the user state
+
+          // Fetch connected users if user is valid
+          const connectedUsers = await getConnectedUsers(currentUser);
+          setUserInfo(connectedUsers); // Update state with the connected users data
+        } catch (error) {
+          console.error("Error updating user info:", error);
+        } finally {
+          setLoading(false); // Stop loading when everything is done
+        }
+      };
+
+      updateUser(); // Update user info when sessions change
+    }
+  }, [groupedSession]); // This effect will run whenever groupedSession changes
   //Fetching the connected users via the useFirebase, for dropdown options, no refresh required
-  const { data: userInfo, refetch } = useFirebase(() =>
-    getConnectedUsers(user)
-  );
 
   //console.log("USER INFO: ", userInfo);
 
@@ -110,7 +162,6 @@ const TimeTable = ({ navigation }) => {
 
   const userOptions = getUserOptions(userInfo);
 
-
   //obtaining the avaialibilty of the user that is selected in the dropdown
   const selectedUseForAvail = selectedUserId
     ? userInfo.find((user) => user.id === selectedUserId)
@@ -119,11 +170,8 @@ const TimeTable = ({ navigation }) => {
     ? user.availability.concat(selectedUseForAvail.availability)
     : user.availability;
 
-
-  //Function to submit session
   const submitSession = async () => {
     try {
-      let createdSessionId;
       if (
         selectedUserId === "" ||
         timeSlot.length === 0 ||
@@ -136,62 +184,41 @@ const TimeTable = ({ navigation }) => {
 
       setLoading(true);
 
-      if (user.status === "student") {
-        createdSessionId = await submittingSession(
-          user.uid,
-          selectedUserId,
-          subject,
-          timeSlot,
-          type,
-          user.status,
-          user.address
-        );
-      } else {
-        createdSessionId = await submittingSession(
-          user.uid,
-          selectedUserId,
-          subject,
-          timeSlot,
-          type,
-          user.status,
-          null
-        );
-      }
+      await submittingSession(
+        user.uid,
+        selectedUserId,
+        subject,
+        timeSlot,
+        type,
+        user.status,
+        user.status === "student" ? user.address : null
+      );
 
-      let newAvailabilities = []; // Array to hold new availability entries
+      const currentUser = await getCurrentUser(); // Fetch fresh user data
+      setUser(currentUser);
+      // Fetch connected users if user is valid
+      const connectedUsers = await getConnectedUsers(currentUser);
+      setUserInfo(connectedUsers); // Update state with the connected users data
 
-      timeSlot.forEach((slot) => {
-        const newAvailability = `${slot}, ${createdSessionId}`;
-        //console.log("NEW AVAIL: ", newAvailability);
-        newAvailabilities.push(newAvailability); // Add each new slot separately
-      });
+      // Update states before the timeout to ensure rendering is correctly handled
+      setModalVisible(false);
+      setTimeslot([]);
+      setSelectedUser("");
+      setSelectedUserId("");
+      setSubject("");
+      setType("");
 
-      // Merge new availabilities with existing ones
-      const updatedAvailability = [...user.availability, ...newAvailabilities];
-
-      // Update the user state in the context
-      setUser({
-        ...user,
-        availability: updatedAvailability,
-      });
-
-      // Delay setting loading to false by 500 ms after updating the user
+      // Use a timeout to provide feedback to the user
       setTimeout(() => {
         Alert.alert("Session was added");
-        setLoading(false), 500;
-        setModalVisible(false);
-        setTimeslot([]);
-        setSelectedUser("");
-        setSelectedUserId("");
-        setSubject("");
-        setType("");
-      });
+        setLoading(false);
+      }, 500);
     } catch (error) {
       console.error("Error submitting session:", error);
       Alert.alert(
         "An error occurred while submitting the session. Please try again."
       );
-      setLoading(false); // Ensure loading is turned off if there's an error
+      setLoading(false);
     }
   };
 
@@ -385,7 +412,7 @@ const TimeTable = ({ navigation }) => {
         {loading ? (
           <ActivityIndicator className="my-5" size="large" color="#FEA07D" />
         ) : (
-          <PagerView style={{ flex: 1, width: '100%' }} initialPage={0}>
+          <PagerView style={{ flex: 1, width: "100%" }} initialPage={0}>
             {days.map((day) => (
               <View key={day}>
                 <View className="flex-row justify-between items-center px-4">

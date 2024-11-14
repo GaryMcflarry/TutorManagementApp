@@ -194,6 +194,7 @@ export const getCurrentUser = async () => {
 
       // Check if the user document exists and return the user data with UID
       if (userDoc.exists()) {
+        //console.log("CURRENT USER Acknowledged")
         return { uid: currentUser.uid, ...userDoc.data() }; // Include the UID in the returned data
       } else {
         return null; // Return null if the document does not exist
@@ -1004,29 +1005,36 @@ export const deleteHomework = async (itemId) => {
 //Schedule Functionality (Timetable Page)
 ////=============================================================================
 
-//function to fetch sessions based of user id, and role and group them together
-export const fetchSessions = async (userId, userRole, setGroupedSessions) => {
+export const fetchSessions = (userId, userRole, setGroupedSessions) => {
   const sessionRef = collection(FIREBASE_DB, "Session");
-  const sessionForId = query(
-    sessionRef,
-    where(userRole === "student" ? "studentId" : "tutorId", "==", userId),
-    orderBy("subject", "asc")
-  );
 
-  return onSnapshot(sessionForId, async (snapshot) => {
+  // Broad listener to all changes in the "Session" collection
+  return onSnapshot(sessionRef, async (snapshot) => {
+    // Fetch all sessions from the snapshot
     const sessionPromises = snapshot.docs.map(async (doc) => {
       const data = doc.data();
-      const oppositeId = userRole === "student" ? data.tutorId : data.studentId;
-      const recipientInfo = await fetchRecipientInfo(oppositeId);
-      return {
-        id: doc.id,
-        recipientName: recipientInfo ? recipientInfo.fullname : "Unknown",
-        ...data,
-      };
+
+      // Check if the session involves the current user
+      const isUserInvolved = userRole === "student"
+        ? data.studentId === userId
+        : data.tutorId === userId;
+
+      // Only process sessions involving the current user
+      if (isUserInvolved) {
+        const oppositeId = userRole === "student" ? data.tutorId : data.studentId;
+        const recipientInfo = await fetchRecipientInfo(oppositeId);
+
+        return {
+          id: doc.id,
+          recipientName: recipientInfo ? recipientInfo.fullname : "Unknown",
+          ...data,
+        };
+      }
+      return null; // Return null if session is not relevant to the user
     });
 
-    // Wait for all recipient info to be fetched
-    const sessions = await Promise.all(sessionPromises);
+    // Wait for all recipient info to be fetched, filter out irrelevant sessions
+    const sessions = (await Promise.all(sessionPromises)).filter(session => session !== null);
 
     // Group sessions by `id`
     const groupedSessions = sessions.reduce((groups, session) => {
@@ -1043,6 +1051,7 @@ export const fetchSessions = async (userId, userRole, setGroupedSessions) => {
     setGroupedSessions(groupedSessions);
   });
 };
+
 //function for submitting session to firestore
 export const submittingSession = async (
   submitId,
