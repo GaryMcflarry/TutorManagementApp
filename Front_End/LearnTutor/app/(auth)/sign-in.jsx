@@ -14,8 +14,8 @@ import { useGlobalContext } from "../../context/GlobalProvider";
 import FormField from "../components/FormField";
 
 const signIn = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("chadsilva0807@gmail.com");
+  const [password, setPassword] = useState("123123123");
   const [loading, setLoading] = useState(false);
   const { setUser, setIsLoggedIn } = useGlobalContext();
 
