@@ -65,7 +65,11 @@
 ###
 
 <h2 align="left">Run for Development: </h2>
+
 Make sure that the package.json is present in the installed files.
+
+###
+
 Then run this command:
 ```powershell
 npm i
