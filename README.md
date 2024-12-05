@@ -62,4 +62,9 @@
 
 <h5 align="center">Database Storage</h5>
 
+
+<h2 align="left">Development run: </h2>
+```bash
+  npm run deploy
+```
 ###
