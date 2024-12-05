@@ -63,8 +63,10 @@
 <h5 align="center">Database Storage</h5>
 
 
-<h2 align="left">Development run: </h2>
+<h2 align="left">Run for Development: </h2>
+Make sure that the package.json is present in the installed files.
+Then run this command:
 ```bash
-  npm run deploy
+npm i
 ```
 ###
