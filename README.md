@@ -66,12 +66,19 @@
 
 <h2 align="left">Run for Development: </h2>
 
-Make sure that the package.json is present in the installed files.
+Make sure that the package.json is present in the installed files. Then run this command:
 
 ###
 
-Then run this command:
 ```powershell
 npm i
 ```
 ###
+
+After all libaries have been installed run the application:
+###
+```powershell
+npx expo start 
+```
+###
+
