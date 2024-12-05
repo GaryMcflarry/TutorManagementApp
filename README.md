@@ -66,6 +66,7 @@
 
 <h2 align="left">Run for Development: </h2>
 
+<h3 align="left">Setup for React Native</h3>
 Make sure that the package.json is present in the installed files. Then run this command:
 
 ###
@@ -81,6 +82,8 @@ After all libaries have been installed run the application:
 npx expo start 
 ```
 ###
+
+<h3 align="left">Firebase backend tutortial: https://www.youtube.com/watch?v=ONAVmsGW6-M&t=913s&pp=ygUZZmlyZWJhc2UgZm9yIHJlYWN0IG5hdGl2ZQ%3D%3D</h3>
 
 <h2 align="left">APK Deployment: </h2>
 <h5 align="left">Follow this link for the neccesary documentation: https://docs.expo.dev/build-reference/apk/</h5>
