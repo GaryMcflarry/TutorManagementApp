@@ -82,3 +82,5 @@ npx expo start
 ```
 ###
 
+<h2 align="left">APK Deployment: </h2>
+<h5 align="center">Follow this link to the neccesary documentation: https://docs.expo.dev/build-reference/apk/</h5>
