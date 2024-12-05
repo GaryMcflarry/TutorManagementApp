@@ -83,7 +83,8 @@ npx expo start
 ```
 ###
 
-<h3 align="left">Firebase backend tutortial: https://www.youtube.com/watch?v=ONAVmsGW6-M&t=913s&pp=ygUZZmlyZWJhc2UgZm9yIHJlYWN0IG5hdGl2ZQ%3D%3D</h3>
+<h3 align="left">Firebase backend tutortial: </h3>
+<h5 align="left">https://www.youtube.com/watch?v=ONAVmsGW6-M&t=913s&pp=ygUZZmlyZWJhc2UgZm9yIHJlYWN0IG5hdGl2ZQ%3D%3D</h5>
 
 <h2 align="left">APK Deployment: </h2>
 <h5 align="left">Follow this link for the neccesary documentation: https://docs.expo.dev/build-reference/apk/</h5>
